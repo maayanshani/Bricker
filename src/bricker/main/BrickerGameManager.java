@@ -1,7 +1,6 @@
 package bricker.main;
 
 import bricker.brick_strategies.BasicCollisionStrategy;
-import bricker.brick_strategies.CollisionStrategy;
 import danogl.GameManager;
 import danogl.GameObject;
 import danogl.collisions.Layer;
@@ -11,11 +10,11 @@ import danogl.gui.rendering.RectangleRenderable;
 import danogl.gui.rendering.Renderable;
 import danogl.gui.rendering.TextRenderable;
 import danogl.util.Vector2;
-import gameobjects.Ball;
-import gameobjects.Brick;
-import gameobjects.Paddle;
+import gameobjects.*;
 
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 
@@ -36,29 +35,32 @@ public class BrickerGameManager extends GameManager {
     private static final int BALL_RADIUS = 20;
 
     private static final float BALL_SPEED = 250;
-    private static final int NUM_OF_BRICKS = 8;
-    private static final int NUM_OF_BRICKS_ROWS = 7;
+    private static final int NUM_BRICKS_PER_ROW = 8;
+    private static final int NUM_ROWS = 7;
     private static final int BRICK_HEIGHT = 15;
     private static final int WALL_WIDTH = 10;
 
     private static final int NUM_OF_LIVES = 3;
     private static final int HEART_SIZE = 30;
 
-    private int numBricks;
-    private int numBricksRows;
+    private int numBricksPerRow;
+    private int numRows;
     private int livesLeft;
     private danogl.util.Counter bricksCountDown;
 
     private Ball ball;
+    private LifeNumeric lifeNumeric;
+    private List<Hearts> heartsList;
     // TODO: use this vars
     private Vector2 windowDimensions;
     private WindowController windowController;
+    private ImageReader imageReader;
 
     public BrickerGameManager(String windowTitle, Vector2 windowDimensions,
-                              int numBricks, int numBricksRows) {
+                              int numBricksPerRow, int numRows) {
         super(windowTitle, windowDimensions);
-        this.numBricks = numBricks;
-        this.numBricksRows = numBricksRows;
+        this.numBricksPerRow = numBricksPerRow;
+        this.numRows = numRows;
         this.livesLeft = NUM_OF_LIVES;
         this.bricksCountDown = new danogl.util.Counter();
 
@@ -83,6 +85,7 @@ public class BrickerGameManager extends GameManager {
                                UserInputListener inputListener,
                                WindowController windowController) {
         this.windowController = windowController;
+        this.imageReader = imageReader;
 
         // initialization:
         super.initializeGame(imageReader, soundReader, inputListener, windowController);
@@ -108,10 +111,11 @@ public class BrickerGameManager extends GameManager {
         createWalls(windowDimensions);
 
         // Creating break:
-        createBricks(windowDimensions, imageReader, numBricks);
+        createBricks(windowDimensions, imageReader);
 
         // Creating lives:
-        createLives(imageReader, windowDimensions, livesLeft);
+        createLives(imageReader, windowDimensions, NUM_OF_LIVES);
+        createLifeText(NUM_OF_LIVES);
 
     }
 
@@ -125,7 +129,7 @@ public class BrickerGameManager extends GameManager {
         float ballHeight = ball.getCenter().y();
         String prompt = "";
         // if we lost:
-        if (ballHeight < 0 || bricksCountDown.value() == numBricks*numBricksRows) {
+        if (ballHeight < 0 || bricksCountDown.value() == numBricksPerRow * numRows) {
             prompt = "You Win!";
         }
 
@@ -135,7 +139,7 @@ public class BrickerGameManager extends GameManager {
             System.out.println("Lives: " + livesLeft);
             // TODO: create new ball
             resetBall();
-            updateLives();
+            updateLives(false);
 //            windowController.resetGame();
 
         }
@@ -194,45 +198,116 @@ public class BrickerGameManager extends GameManager {
 
     }
 
-    private void createLives(ImageReader imageReader, Vector2 windowDimensions,
-                            int numHearts) {
-        // TODO: i didnt use object in object, like the tip in the instructions
-        // Create the hearts:
-        Renderable heartImage = imageReader.readImage("assets/heart.png", true);
-        for (int i = 0; i < numHearts; i++) {
-            Vector2 heartSize = new Vector2(30, 30);
-            float corX = windowDimensions.x() - 30;
-            float corY = (i+1)*HEART_SIZE + 0.5f*HEART_SIZE + WALL_WIDTH + 2*(i+1);
-            Vector2 heartCoors = new Vector2(corX, corY);
-            GameObject heart = new GameObject(Vector2.ZERO, heartSize, heartImage);
+//    private void createLives(ImageReader imageReader, Vector2 windowDimensions,
+//                            int numHearts) {
+//        // TODO: i didnt use object in object, like the tip in the instructions
+//        // Create the hearts:
+//        this.lifeNumeric = new LifeNumeric(NUM_OF_LIVES);
+//        Renderable heartImage = imageReader.readImage("assets/heart.png", true);
+//        for (int i = 0; i < numHearts; i++) {
+//            Vector2 heartSize = new Vector2(30, 30);
+//            float corX = windowDimensions.x() - 30;
+//            float corY = (i+1)*HEART_SIZE + 0.5f*HEART_SIZE + WALL_WIDTH + 2*(i+1);
+//            Vector2 heartCoors = new Vector2(corX, corY);
+//            GameObject heart = new GameObject(Vector2.ZERO, heartSize, heartImage);
+//
+//            heart.setCenter(heartCoors);
+//            this.gameObjects().addGameObject(heart, Layer.UI);
+//        }
+//
+//        // show the number of lives:
+//        TextRenderable textLives = new TextRenderable("" + livesLeft);
+//        if (livesLeft == 1) {
+//            textLives.setColor(Color.red);
+//        }
+//        else if (livesLeft == 2) {
+//            textLives.setColor(Color.yellow);
+//        }
+//        else {
+//            textLives.setColor(Color.green);
+//        }
+//
+//        Vector2 heartCoors = new Vector2(windowDimensions.x() - HEART_SIZE, 0.5f*HEART_SIZE + WALL_WIDTH);
+//        // TODO MAAYAN: needs to show in renderer
+//
+//    }
+private void createLives(ImageReader imageReader, Vector2 windowDimensions, int numHearts) {
+    this.lifeNumeric = new LifeNumeric(NUM_OF_LIVES);
+    this.heartsList = new ArrayList<>(); // Initialize the list
+    Renderable heartImage = imageReader.readImage("assets/heart.png", true);
 
-            heart.setCenter(heartCoors);
-            this.gameObjects().addGameObject(heart, Layer.UI);
+    for (int i = 0; i < numHearts; i++) {
+        Vector2 heartSize = new Vector2(30, 30);
+        float corX = windowDimensions.x() - (i + 1) * (heartSize.x() + 5); // Position hearts horizontally
+        float corY = 20; // Fixed vertical position
+        Vector2 heartCoors = new Vector2(corX, corY);
+
+        Hearts heart = new Hearts(heartCoors, heartSize, heartImage);
+        heartsList.add(heart); // Add heart to the list
+        this.gameObjects().addGameObject(heart, Layer.UI);
+    }
+}
+
+
+    private GameObject lifeTextObject; // Add this field to store the text object
+
+    private void createLifeText(int numLives) {
+        TextRenderable textRenderable = new TextRenderable("Lives: " + numLives);
+
+        // Set the text color based on the number of lives
+        if (numLives == 1) {
+            textRenderable.setColor(Color.red);
+        } else if (numLives == 2) {
+            textRenderable.setColor(Color.yellow);
+        } else {
+            textRenderable.setColor(Color.green);
         }
 
-        // show the number of lives:
-        TextRenderable textLives = new TextRenderable("" + livesLeft);
-        if (livesLeft == 1) {
-            textLives.setColor(Color.red);
-        }
-        else if (livesLeft == 2) {
-            textLives.setColor(Color.yellow);
-        }
-        else {
-            textLives.setColor(Color.green);
+        // Position for the text
+        float corX = windowDimensions.x() - 100; // Position hearts horizontally
+        float corY = 50; // Fixed vertical position
+        Vector2 textPosition = new Vector2(corX, corY); // Top-left corner
+        Vector2 textSize = new Vector2(80, 20); // Size for text
+
+        // Remove the old text object if it exists
+        if (lifeTextObject != null) {
+            this.gameObjects().removeGameObject(lifeTextObject, Layer.UI);
         }
 
-        Vector2 heartCoors = new Vector2(windowDimensions.x() - HEART_SIZE, 0.5f*HEART_SIZE + WALL_WIDTH);
-        // TODO MAAYAN: needs to show in renderer
-
-
+        // Create the new text object
+        lifeTextObject = new GameObject(textPosition, textSize, textRenderable);
+        this.gameObjects().addGameObject(lifeTextObject, Layer.UI);
     }
 
 
-    private void updateLives() {
-        // TODO: finish
-//        createLives();
+    private void deleteLives() {
+        for (Hearts heart : heartsList) {
+            this.gameObjects().removeGameObject(heart, Layer.UI);
+        }
     }
+
+
+
+    private void updateLives(boolean add) {
+        System.out.println("Updating lives...");
+
+        if (add) {
+            this.lifeNumeric.addLife();
+        } else {
+            this.lifeNumeric.loseLife();
+        }
+
+        // Update hearts
+        this.deleteLives();
+        int numLives = this.lifeNumeric.getNumLives();
+        if (numLives > 0) {
+            createLives(imageReader, windowDimensions, numLives);
+        }
+
+        // Update the life text
+        createLifeText(numLives);
+    }
+
 
     private void createBall(ImageReader imageReader, Vector2 windowDimensions,
                             SoundReader soundReader) {
@@ -241,20 +316,6 @@ public class BrickerGameManager extends GameManager {
         ball = new Ball(Vector2.ZERO, new Vector2(BALL_RADIUS, BALL_RADIUS), ballImage, collisionSound);
 
         resetBall();
-//
-//        float ballVelX = BALL_SPEED;
-//        float ballVelY = BALL_SPEED;
-//        Random rand = new Random();
-//        if (rand.nextBoolean()) {
-//            ballVelX *=1;
-//        }
-//        if (rand.nextBoolean()) {
-//            ballVelY *=1;
-//        }
-//        ball.setVelocity(new Vector2(ballVelX, ballVelY));
-//
-//        ball.setCenter(windowDimensions.mult(0.5f));
-//        this.gameObjects().addGameObject(ball);
 
     }
 
@@ -292,9 +353,9 @@ public class BrickerGameManager extends GameManager {
 
     }
 
-    private void createBricks(Vector2 windowDimensions, ImageReader imageReader, int numBricks) {
-        for (int i = 0; i < this.numBricksRows; i++) {
-            createBricksRow(windowDimensions, imageReader, this.numBricks, i);
+    private void createBricks(Vector2 windowDimensions, ImageReader imageReader) {
+        for (int i = 0; i < this.numRows; i++) {
+            createBricksRow(windowDimensions, imageReader, this.numBricksPerRow, i);
         }
 
     }
@@ -314,13 +375,13 @@ public class BrickerGameManager extends GameManager {
     private void createBrick(ImageReader imageReader,
                              Vector2 brickDims, Vector2 brickCoors) {
         // TODO MAAYAN: fix the bricks layer according to 1.7 note 4
-        Renderable breakImage = imageReader.readImage("assets/brick.png", false);
+        Renderable brickImage = imageReader.readImage("assets/brick.png", false);
         BasicCollisionStrategy basicCollisionStrategy =
                 new BasicCollisionStrategy(this.gameObjects(), this);
 
         Brick brick = new Brick(Vector2.ZERO,
                 new Vector2(brickDims),
-                breakImage,
+                brickImage,
                 basicCollisionStrategy);
         brick.setCenter(brickCoors);
 
@@ -329,14 +390,14 @@ public class BrickerGameManager extends GameManager {
     }
 
     public static void main(String[] args) {
-        int numBricks = NUM_OF_BRICKS;
-        int numBricksRows = NUM_OF_BRICKS_ROWS;
+        int numBricks = NUM_BRICKS_PER_ROW;
+        int numRows = NUM_ROWS;
         if (args.length == 2) {
             numBricks = Integer.parseInt(args[0]);
-            numBricksRows = Integer.parseInt(args[1]);
+            numRows = Integer.parseInt(args[1]);
         }
         BrickerGameManager trial = new BrickerGameManager("bouncing ball",
-                new Vector2(700, 500), numBricks, numBricksRows);
+                new Vector2(700, 500), numBricks, numRows);
         trial.run();
 
 
