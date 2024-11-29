@@ -38,6 +38,7 @@ public class Ball extends GameObject {
         collisionCounter++;
     }
 
+    // TODO: what is these?
     public int getCollisionCounter() {
         return collisionCounter;
     }

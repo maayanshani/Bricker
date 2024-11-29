@@ -1,6 +1,7 @@
 package bricker.main;
 
 import bricker.brick_strategies.BasicCollisionStrategy;
+import bricker.brick_strategies.CollisionStrategy;
 import danogl.GameManager;
 import danogl.GameObject;
 import danogl.collisions.Layer;
@@ -21,12 +22,10 @@ import java.util.Random;
 /**
  * TODO:
  * 1. num of lives in text
- * 2. changed heart to Layer.UI - DONE
- * 3. after psila dont need to restart the game. need to continue from the same place
- * 4. count down bricks who disappear - DONE
- * 5. change Ex2 to Bricker
- * 6. Create new packages - DONE
- * 7. finish updateLives
+ * 5. change Ex2 to Bricker - ROTEM
+ * 7. finish updateLives - ROTEM
+ * 8. fix all layers (addObject)- ball, bricks - MAAYAN
+ * 9. export live to new class - ROTEM
  *
  */
 
@@ -64,6 +63,8 @@ public class BrickerGameManager extends GameManager {
         this.bricksCountDown = new danogl.util.Counter();
 
     }
+
+    // TODO: needed?
     public int getBricksCountDown() {
         return bricksCountDown.value();
     }
