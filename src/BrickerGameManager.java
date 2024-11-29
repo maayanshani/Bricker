@@ -1,3 +1,4 @@
+
 import brick_strategies.BasicCollisionStrategy;
 import danogl.GameManager;
 import danogl.GameObject;
@@ -22,6 +23,14 @@ import java.util.Random;
 
  */
 
+/**
+ * todo:
+ * 1. fix remove ( dont know what what the probelm)
+ * 2. changed heart to Layer.UI
+ * 3. after psila dont need to restart the game. need to continue from the same place
+ *
+ */
+
 
 public class BrickerGameManager extends GameManager {
     private static final int PADDLE_HEIGHT = 15;
@@ -41,8 +50,8 @@ public class BrickerGameManager extends GameManager {
     private int numBricksRows;
     private int livesLeft;
     // TODO MAAYAN: find out how to use Counter
-    //    private danogl.util.Counter bricksCountDown;
-    private int bricksCountDown;
+    private danogl.util.Counter bricksCountDown;
+//    private int bricksCountDown;
 
     private Ball ball;
     private Vector2 windowDimensions;
@@ -55,17 +64,16 @@ public class BrickerGameManager extends GameManager {
         this.numBricksRows = numBricksRows;
         this.livesLeft = NUM_OF_LIVES;
         // TODO MAAYAN: find out how to use Counter
-        this.bricksCountDown = 0;
+        this.bricksCountDown = new danogl.util.Counter();
 
     }
-
     public int getBricksCountDown() {
-        return bricksCountDown;
+        return bricksCountDown.value();
     }
 
-    public void setBricksCountDown(int bricksCountDown) {
-        this.bricksCountDown = bricksCountDown;
-    }
+//    public void setBricksCountDown(int bricksCountDown) {
+//        this.bricksCountDown = bricksCountDown;
+//    }
 
     @Override
     public void initializeGame(ImageReader imageReader,
@@ -89,10 +97,10 @@ public class BrickerGameManager extends GameManager {
         // user paddle:
         createPaddle(imageReader, inputListener, windowDimensions, paddleImage);
         // AI paddle:
-        GameObject aiPaddle = new GameObject(Vector2.ZERO, new Vector2(100, 15), paddleImage);
-        aiPaddle.setCenter(
-                new Vector2(windowDimensions.x()/2, 30));
-        this.gameObjects().addGameObject(aiPaddle);
+//        GameObject aiPaddle = new GameObject(Vector2.ZERO, new Vector2(100, 15), paddleImage);
+//        aiPaddle.setCenter(
+//                new Vector2(windowDimensions.x()/2, 30));
+//        this.gameObjects().addGameObject(aiPaddle);
 
         // Creating walls:
         createWalls(windowDimensions);
@@ -115,7 +123,7 @@ public class BrickerGameManager extends GameManager {
         float ballHeight = ball.getCenter().y();
         String prompt = "";
         // if we lost:
-        if (ballHeight < 0 || bricksCountDown == numBricks*numBricksRows) {
+        if (ballHeight < 0 || bricksCountDown.value() == numBricks*numBricksRows) {
             // TODO MAAYAN: how to decrease bricks num from collision?
             prompt = "You Win!";
         }
@@ -193,7 +201,7 @@ public class BrickerGameManager extends GameManager {
             GameObject heart = new GameObject(Vector2.ZERO, heartSize, heartImage);
 
             heart.setCenter(heartCoors);
-            this.gameObjects().addGameObject(heart);
+            this.gameObjects().addGameObject(heart, Layer.UI);
         }
 
         // show the number of lives:
