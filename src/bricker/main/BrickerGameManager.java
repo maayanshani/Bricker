@@ -21,10 +21,9 @@ import java.util.Random;
 
 /**
  * TODO:
- * 1. class Lives (fix num of lives in text, export live to new class)  - MAAYAN
  * 2. change Ex2 to Bricker - ROTEM
  * 3. fix all layers (addObject)- ball, bricks - MAAYAN
- * 4. bricks behind the lives dont disappears
+ * 4. bricks behind the lives dont disappears ? (not happens to me MAAYAN)
  * 5. if the user win, the game wont reset
  *
  */
@@ -35,15 +34,18 @@ public class BrickerGameManager extends GameManager {
     private static final int PADDLE_HEIGHT = 15;
     private static final int PADDLE_WIDTH = 100;
     private static final int BALL_RADIUS = 20;
-
     private static final float BALL_SPEED = 250;
     private static final int NUM_BRICKS_PER_ROW = 8;
     private static final int NUM_ROWS = 7;
     private static final int BRICK_HEIGHT = 15;
     private static final int WALL_WIDTH = 10;
-
     private static final int NUM_OF_LIVES = 3;
     private static final int HEART_SIZE = 30;
+    private static final int HEART_COR_Y = 20;
+    private static final int MARGIN = 5;
+    private static final int TEXT_SIZE_X = 80;
+    private static final int TEXT_SIZE_Y = 20;
+    private static final int TEXT_COR_Y = 50;
 
     // Bricks fields:
     private final int numBricksPerRow;
@@ -53,7 +55,8 @@ public class BrickerGameManager extends GameManager {
     // Lives fields:
     private int livesLeft;
     // TODO for MAAYAN: we can use mutable array?
-    private List<Hearts> heartsList;
+    // Don't think cause i delete and create a new one when numLives change
+    private List<Heart> heartsList;
     private LifeNumeric lifeNumeric;
 
     // Initialization fields:
@@ -71,6 +74,8 @@ public class BrickerGameManager extends GameManager {
     // Paddles fields:
     private boolean extraPaddleOn;
     private Paddle extraPaddle;
+    private int heartCounter;
+    private Heart[] heartList;
 
     /**
      * Constructor for the BrickerGameManager.
@@ -83,23 +88,19 @@ public class BrickerGameManager extends GameManager {
      * @param numBricksPerRow Number of bricks per row.
      * @param numRows Number of rows of bricks.
      */
-
     public BrickerGameManager(String windowTitle, Vector2 windowDimensions,
                               int numBricksPerRow, int numRows) {
         super(windowTitle, windowDimensions);
         this.numBricksPerRow = numBricksPerRow;
         this.numRows = numRows;
         this.bricksCountDown = new danogl.util.Counter();
-
         this.packCounter = 0;
         // TODO: can be replaced with mutable array
         this.packsList = new Pack[numBricksPerRow*numRows*2];
-
+        this.heartList = new Heart[numBricksPerRow*numRows*2];
         this.lifeNumeric = new LifeNumeric(NUM_OF_LIVES);
-
         this.extraPaddleOn = false;
         this.extraPaddle = null;
-
     }
 
     // TODO: needed?
@@ -128,7 +129,6 @@ public class BrickerGameManager extends GameManager {
             extraPaddle = null;
             extraPaddleOn = false;
         }
-
     }
 
     /**
@@ -150,6 +150,14 @@ public class BrickerGameManager extends GameManager {
                 this.gameObjects().addGameObject(object);
                 extraPaddleOn = true;
             }
+        }
+        if (object instanceof Heart) {
+            this.gameObjects().addGameObject(object);
+            this.heartList[packCounter] = (Heart) object;
+            this.heartCounter++;
+        }
+        else {
+            this.gameObjects().addGameObject(object);
         }
     }
 
@@ -211,6 +219,7 @@ public class BrickerGameManager extends GameManager {
         checkForGameEnd();
         checkPacksStatus();
         checkExtraPaddleStatus();
+        checkHeartsStatus();
     }
 
     private void checkPacksStatus() {
@@ -222,6 +231,19 @@ public class BrickerGameManager extends GameManager {
                     removeObject(currentPack);
                     packsList[i] = null;
                     packCounter--;
+                }
+            }
+        }
+    }
+    private void checkHeartsStatus() {
+        for (int i = 0; i < heartList.length; i++) {
+            Heart currentHeart = heartList[i];
+            if (currentHeart != null) {
+                float heartHeight = currentHeart.getCenter().y();
+                if (heartHeight > windowDimensions.y()) {
+                    removeObject(currentHeart);
+                    heartList[i] = null;
+                    heartCounter--;
                 }
             }
         }
@@ -249,7 +271,6 @@ public class BrickerGameManager extends GameManager {
             resetBall();
             updateLives(false);
             System.out.println("Lives: " + this.lifeNumeric.getNumLives());
-
         }
 
         if (this.lifeNumeric.getNumLives() <=0) {
@@ -268,12 +289,11 @@ public class BrickerGameManager extends GameManager {
     }
 
     private void createWalls(Vector2 windowDimensions) {
-        // TODO: CODING STYLE
         // TODO: dont show walls
 
         Color borderColor = Color.blue;
         // create side walls
-        int[] wallsWidth = new int[]{(int) (windowDimensions.x()-5), 5};
+        int[] wallsWidth = new int[]{(int) (windowDimensions.x()-MARGIN), MARGIN};
         int wallHeight = (int)windowDimensions.y();
 
         RectangleRenderable sideWallRectangle = new RectangleRenderable(borderColor);
@@ -295,7 +315,6 @@ public class BrickerGameManager extends GameManager {
         upperWall.setCenter(
                 new Vector2(windowDimensions.x()/2, WALL_WIDTH/2));
         this.gameObjects().addGameObject(upperWall);
-
     }
 
     private void addBackground(ImageReader imageReader, Vector2 windowDimensions) {
@@ -306,27 +325,25 @@ public class BrickerGameManager extends GameManager {
 
     }
 
-
     private void createLives(ImageReader imageReader, Vector2 windowDimensions, int numHearts) {
         this.heartsList = new ArrayList<>(); // Initialize the list
         Renderable heartImage = imageReader.readImage("assets/heart.png", true);
 
         for (int i = 0; i < numHearts; i++) {
             Vector2 heartSize = new Vector2(HEART_SIZE, HEART_SIZE);
-            float corX = windowDimensions.x() - (i + 1) * (heartSize.x() + 5); // Position hearts horizontally
-            float corY = 20; // Fixed vertical position
-            Vector2 heartCoors = new Vector2(corX, corY);
+            float corX = windowDimensions.x() - (i + 1) * (heartSize.x() + MARGIN); // Position hearts
+            // horizontally
+            Vector2 heartCoors = new Vector2(corX, HEART_COR_Y);
 
-            Hearts heart = new Hearts(heartCoors, heartSize, heartImage);
+            Heart heart = new Heart(heartCoors, heartSize, heartImage);
             heartsList.add(heart); // Add heart to the list
             this.gameObjects().addGameObject(heart, Layer.UI);
         }
 }
 
-
     private GameObject lifeTextObject; // Add this field to store the text object
 
-    // TODO for MAAYAN: switch to CONSTANT
+    // TODO for MAAYAN: switch to CONSTANT.     why?
     private void createLifeText(int numLives) {
         TextRenderable textRenderable = new TextRenderable("Lives: " + numLives);
 
@@ -341,23 +358,20 @@ public class BrickerGameManager extends GameManager {
 
         // Position for the text
         float corX = windowDimensions.x() - 100; // Position hearts horizontally
-        float corY = 50; // Fixed vertical position
-        Vector2 textPosition = new Vector2(corX, corY); // Top-left corner
-        Vector2 textSize = new Vector2(80, 20); // Size for text
+        Vector2 textPosition = new Vector2(corX, TEXT_COR_Y); // Top-left corner
+        Vector2 textSize = new Vector2(TEXT_SIZE_X, TEXT_SIZE_Y); // Size for text
 
         // Remove the old text object if it exists
         if (lifeTextObject != null) {
             this.gameObjects().removeGameObject(lifeTextObject, Layer.UI);
         }
-
         // Create the new text object
         lifeTextObject = new GameObject(textPosition, textSize, textRenderable);
         this.gameObjects().addGameObject(lifeTextObject, Layer.UI);
     }
 
-
-    private void deleteLives() {
-        for (Hearts heart : heartsList) {
+    private void deleteHearts() {
+        for (Heart heart : heartsList) {
             this.gameObjects().removeGameObject(heart, Layer.UI);
         }
     }
@@ -368,7 +382,6 @@ public class BrickerGameManager extends GameManager {
      *
      * @param add True to add a life, false to remove one.
      */
-
     private void updateLives(boolean add) {
         System.out.println("Updating lives...");
 
@@ -384,7 +397,7 @@ public class BrickerGameManager extends GameManager {
         System.out.println("Updated Lives: " + numLives);
 
         // Clear the old hearts and recreate based on new life count
-        deleteLives();
+        deleteHearts();
         if (numLives > 0) {
             createLives(imageReader, windowDimensions, numLives);
         }
@@ -469,6 +482,7 @@ public class BrickerGameManager extends GameManager {
 
         this.gameObjects().addGameObject(brick);
     }
+
     private CollisionStrategy createBrickCollisionStrategy() {
         Random random = new Random();
 
@@ -511,7 +525,12 @@ public class BrickerGameManager extends GameManager {
                     case 3:
                         return new TurboStrategy();
                     case 4:
-                        return new ReturnLiveStrategy();
+                        return new ReturnLiveStrategy(this,
+                                windowDimensions,
+                                inputListener,
+                                imageReader,
+                                HEART_SIZE
+                                );
                     case 5:
                         return new MultipleBehaviorsStrategy();
                 }
@@ -519,7 +538,6 @@ public class BrickerGameManager extends GameManager {
         }
         return null;
     }
-
 
     public static void main(String[] args) {
         int numBricks = NUM_BRICKS_PER_ROW;
@@ -531,7 +549,5 @@ public class BrickerGameManager extends GameManager {
         BrickerGameManager trial = new BrickerGameManager("bouncing ball",
                 new Vector2(700, 500), numBricks, numRows);
         trial.run();
-
-
     }
 }

@@ -19,7 +19,6 @@ public class Pack extends Ball{
      *                       the GameObject will not be rendered.
      * @param collisionSound
      */
-
     // TODO: when call pack, add new image, same sound, 3/4 size
     public Pack(Vector2 topLeftCorner,
                 Vector2 dimensions,
@@ -37,9 +36,6 @@ public class Pack extends Ball{
         Vector2 newVel = getVelocity().flipped(collision.getNormal());
         setVelocity(newVel);
         collisionSound.play();
-
         collisionCounter++;
     }
-
-
 }
