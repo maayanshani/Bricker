@@ -43,8 +43,8 @@ public class BrickerGameManager extends GameManager {
     private static final int NUM_OF_LIVES = 3;
     private static final int HEART_SIZE = 30;
 
-    private int numBricksPerRow;
-    private int numRows;
+    private final int numBricksPerRow;
+    private final int numRows;
     private int livesLeft;
     private danogl.util.Counter bricksCountDown;
 
@@ -61,23 +61,47 @@ public class BrickerGameManager extends GameManager {
     private Pack[] packsList;
     private SoundReader soundReader;
 
+
+    /**
+     * Constructor for the BrickerGameManager.
+     * <p>
+     * Initializes the game manager with specified settings like window title,
+     * dimensions, number of bricks per row, and number of rows.
+     *
+     * @param windowTitle Title of the game window.
+     * @param windowDimensions Dimensions of the game window.
+     * @param numBricksPerRow Number of bricks per row.
+     * @param numRows Number of rows of bricks.
+     */
+
     public BrickerGameManager(String windowTitle, Vector2 windowDimensions,
                               int numBricksPerRow, int numRows) {
         super(windowTitle, windowDimensions);
         this.numBricksPerRow = numBricksPerRow;
         this.numRows = numRows;
-        this.livesLeft = NUM_OF_LIVES;
         this.bricksCountDown = new danogl.util.Counter();
         this.packCounter = 0;
         this.packsList = new Pack[packCounter];
+        this.lifeNumeric = new LifeNumeric(NUM_OF_LIVES);
 
     }
 
     // TODO: needed?
+    /**
+     * Returns the number of bricks removed from the game.
+     *
+     * @return Number of bricks removed.
+     */
     public int getBricksCountDown() {
         return bricksCountDown.value();
     }
 
+    /**
+     * Removes a specified game object from the game.
+     * If the removed object is a brick, it updates the brick counter.
+     *
+     * @param object The game object to remove.
+     */
     public void removeObject(GameObject object) {
         boolean removed = this.gameObjects().removeGameObject(object);
         if (removed && object instanceof Brick) {
@@ -86,6 +110,12 @@ public class BrickerGameManager extends GameManager {
         }
     }
 
+    /**
+     * Adds a specified game object to the game.
+     * If the added object is a pack, it tracks the pack.
+     *
+     * @param object The game object to add.
+     */
     public void addObject(GameObject object) {
         this.gameObjects().addGameObject(object);
         if (object instanceof Pack) {
@@ -94,6 +124,15 @@ public class BrickerGameManager extends GameManager {
         }
     }
 
+    /**
+     * Initializes the game by setting up the components and environment.
+     * Sets up elements like the background, ball, paddle, bricks, and lives.
+     *
+     * @param imageReader Reader for loading images.
+     * @param soundReader Reader for loading sounds.
+     * @param inputListener Listener for user inputs.
+     * @param windowController Controller for managing the game window.
+     */
     @Override
     public void initializeGame(ImageReader imageReader,
                                SoundReader soundReader,
@@ -131,6 +170,12 @@ public class BrickerGameManager extends GameManager {
 
     }
 
+    /**
+     * Updates the game state on each frame.
+     * Checks for game-ending conditions and updates objects in the game.
+     *
+     * @param deltaTime Time passed since the last frame.
+     */
     @Override
     public void update(float deltaTime) {
         super.update(deltaTime);
@@ -148,20 +193,20 @@ public class BrickerGameManager extends GameManager {
 
         // if we won:
         if (ballHeight > windowDimensions.y()) {
-            livesLeft--;
-            System.out.println("Lives: " + livesLeft);
             resetBall();
             updateLives(false);
+            System.out.println("Lives: " + this.lifeNumeric.getNumLives());
 
         }
-        if (livesLeft <=0) {
+
+        if (this.lifeNumeric.getNumLives() <=0) {
             prompt = "You Lose!";
         }
 
         if (!prompt.isEmpty()) {
             prompt += " Play again?";
             if (windowController.openYesNoDialog(prompt)) {
-                livesLeft = NUM_OF_LIVES;
+                this.lifeNumeric = new LifeNumeric(NUM_OF_LIVES);
                 windowController.resetGame();
             } else {
                 windowController.closeWindow();
@@ -212,41 +257,8 @@ public class BrickerGameManager extends GameManager {
 
     }
 
-//    private void createLives(ImageReader imageReader, Vector2 windowDimensions,
-//                            int numHearts) {
-//        // TODO: i didnt use object in object, like the tip in the instructions
-//        // Create the hearts:
-//        this.lifeNumeric = new LifeNumeric(NUM_OF_LIVES);
-//        Renderable heartImage = imageReader.readImage("assets/heart.png", true);
-//        for (int i = 0; i < numHearts; i++) {
-//            Vector2 heartSize = new Vector2(30, 30);
-//            float corX = windowDimensions.x() - 30;
-//            float corY = (i+1)*HEART_SIZE + 0.5f*HEART_SIZE + WALL_WIDTH + 2*(i+1);
-//            Vector2 heartCoors = new Vector2(corX, corY);
-//            GameObject heart = new GameObject(Vector2.ZERO, heartSize, heartImage);
-//
-//            heart.setCenter(heartCoors);
-//            this.gameObjects().addGameObject(heart, Layer.UI);
-//        }
-//
-//        // show the number of lives:
-//        TextRenderable textLives = new TextRenderable("" + livesLeft);
-//        if (livesLeft == 1) {
-//            textLives.setColor(Color.red);
-//        }
-//        else if (livesLeft == 2) {
-//            textLives.setColor(Color.yellow);
-//        }
-//        else {
-//            textLives.setColor(Color.green);
-//        }
-//
-//        Vector2 heartCoors = new Vector2(windowDimensions.x() - HEART_SIZE, 0.5f*HEART_SIZE + WALL_WIDTH);
-//        // TODO MAAYAN: needs to show in renderer
-//
-//    }
+
     private void createLives(ImageReader imageReader, Vector2 windowDimensions, int numHearts) {
-        this.lifeNumeric = new LifeNumeric(NUM_OF_LIVES);
         this.heartsList = new ArrayList<>(); // Initialize the list
         Renderable heartImage = imageReader.readImage("assets/heart.png", true);
 
@@ -295,37 +307,41 @@ public class BrickerGameManager extends GameManager {
     }
 
 
-    // TODO for MAAYAN: why not use the method?
     private void deleteLives() {
         for (Hearts heart : heartsList) {
             this.gameObjects().removeGameObject(heart, Layer.UI);
         }
     }
 
-
-
+    /**
+     * Updates the player's lives both numerically and visually.
+     * Adjusts the life counter, refreshes the hearts, and updates the life text.
+     *
+     * @param add True to add a life, false to remove one.
+     */
     private void updateLives(boolean add) {
         System.out.println("Updating lives...");
 
+        // Update the numeric life counter
         if (add) {
             this.lifeNumeric.addLife();
         } else {
             this.lifeNumeric.loseLife();
         }
 
-        // TODO for MAAYAN: if the method checks if to delete or add,
-        //  why it always remove?
-        // Update hearts
-        this.deleteLives();
+        // Get the updated number of lives
         int numLives = this.lifeNumeric.getNumLives();
+        System.out.println("Updated Lives: " + numLives);
+
+        // Clear the old hearts and recreate based on new life count
+        deleteLives();
         if (numLives > 0) {
             createLives(imageReader, windowDimensions, numLives);
         }
 
-        // Update the life text
+        // Update the text displaying the number of lives
         createLifeText(numLives);
     }
-
 
     private void createBall(ImageReader imageReader, Vector2 windowDimensions,
                             SoundReader soundReader) {
@@ -334,7 +350,6 @@ public class BrickerGameManager extends GameManager {
         ball = new Ball(Vector2.ZERO, new Vector2(BALL_RADIUS, BALL_RADIUS), ballImage, collisionSound);
 
         resetBall();
-
     }
 
     private void resetBall() {
@@ -354,7 +369,6 @@ public class BrickerGameManager extends GameManager {
         ball.setCenter(windowDimensions.mult(0.5f));
 
         this.gameObjects().addGameObject(ball);
-
     }
 
     private void createPaddle(ImageReader imageReader, UserInputListener inputListener,
@@ -369,14 +383,12 @@ public class BrickerGameManager extends GameManager {
         paddle.setCenter(
                 new Vector2(windowDimensions.x()/2, (int) (windowDimensions.y()-WALL_WIDTH)));
         this.gameObjects().addGameObject(paddle);
-
     }
 
     private void createBricks(Vector2 windowDimensions, ImageReader imageReader) {
         for (int i = 0; i < this.numRows; i++) {
             createBricksRow(windowDimensions, imageReader, this.numBricksPerRow, i);
         }
-
     }
 
     private void createBricksRow(Vector2 windowDimensions, ImageReader imageReader,
@@ -406,7 +418,6 @@ public class BrickerGameManager extends GameManager {
         brick.setCenter(brickCoors);
 
         this.gameObjects().addGameObject(brick);
-
     }
     private CollisionStrategy createBrickCollisionStrategy() {
         Random random = new Random();
@@ -423,6 +434,10 @@ public class BrickerGameManager extends GameManager {
 
         // Generate a random number between 0 and 1
         float randomValue = random.nextFloat();
+
+//        // todo: delete this line
+//        return new BasicCollisionStrategy(this.gameObjects(), this);
+//        // todo: uncomment next section
 
         // Add the relevant strategy:
         // TODO FOR MAAYAN: add the relevant parameters for your strategies

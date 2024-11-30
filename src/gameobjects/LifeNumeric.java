@@ -1,7 +1,5 @@
 package gameobjects;
 
-// TODO FOR MAAYAN: why numeric lives and not lives? and add the graphic here
-
 public class LifeNumeric {
     private static final int MAX_LIFES = 4;
     private int numLives;
@@ -21,18 +19,18 @@ public class LifeNumeric {
     }
 
     public int getNumLives() {
-        return numLives;
+        return this.numLives;
     }
 
     public void addLife() {
         if (numLives < MAX_LIFES) {
-            numLives++;
+            this.numLives++;
         }
     }
 
     public void loseLife() {
-        if (numLives > 0) {
-            numLives--;
+        if (this.numLives > 0) {
+            this.numLives--;
         }
     }
 
