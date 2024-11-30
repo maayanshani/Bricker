@@ -1,6 +1,6 @@
 package bricker.main;
 
-import bricker.brick_strategies.BasicCollisionStrategy;
+import bricker.brick_strategies.*;
 import danogl.GameManager;
 import danogl.GameObject;
 import danogl.collisions.Layer;
@@ -13,6 +13,7 @@ import danogl.util.Vector2;
 import gameobjects.*;
 
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -20,11 +21,10 @@ import java.util.Random;
 
 /**
  * TODO:
- * 1. num of lives in text
- * 5. change Ex2 to Bricker - ROTEM
- * 7. finish updateLives - ROTEM
- * 8. fix all layers (addObject)- ball, bricks - MAAYAN
- * 9. export live to new class - ROTEM
+ * 1. class Lives (fix num of lives in text, export live to new class)  - MAAYAN
+ * 2. change Ex2 to Bricker - ROTEM
+ * 3. fix all layers (addObject)- ball, bricks - MAAYAN
+ * 4.
  *
  */
 
@@ -55,6 +55,11 @@ public class BrickerGameManager extends GameManager {
     private Vector2 windowDimensions;
     private WindowController windowController;
     private ImageReader imageReader;
+    private UserInputListener inputListener;
+
+    private int packCounter;
+    private Pack[] packsList;
+    private SoundReader soundReader;
 
     public BrickerGameManager(String windowTitle, Vector2 windowDimensions,
                               int numBricksPerRow, int numRows) {
@@ -63,6 +68,8 @@ public class BrickerGameManager extends GameManager {
         this.numRows = numRows;
         this.livesLeft = NUM_OF_LIVES;
         this.bricksCountDown = new danogl.util.Counter();
+        this.packCounter = 0;
+        this.packsList = new Pack[packCounter];
 
     }
 
@@ -79,6 +86,14 @@ public class BrickerGameManager extends GameManager {
         }
     }
 
+    public void addObject(GameObject object) {
+        this.gameObjects().addGameObject(object);
+        if (object instanceof Pack) {
+            this.packCounter++;
+            this.packsList[packCounter] = (Pack) object;
+        }
+    }
+
     @Override
     public void initializeGame(ImageReader imageReader,
                                SoundReader soundReader,
@@ -86,10 +101,12 @@ public class BrickerGameManager extends GameManager {
                                WindowController windowController) {
         this.windowController = windowController;
         this.imageReader = imageReader;
+        this.soundReader = soundReader;
 
         // initialization:
         super.initializeGame(imageReader, soundReader, inputListener, windowController);
         windowDimensions = windowController.getWindowDimensions();
+        this.inputListener = inputListener;
 
         // Adding background
         addBackground(imageReader, windowDimensions);
@@ -98,14 +115,9 @@ public class BrickerGameManager extends GameManager {
         createBall(imageReader, windowDimensions, soundReader);
 
         // Creating paddles:
-        Renderable paddleImage = imageReader.readImage("assets/paddle.png", true);
         // user paddle:
-        createPaddle(imageReader, inputListener, windowDimensions, paddleImage);
-        // AI paddle:
-//        GameObject aiPaddle = new GameObject(Vector2.ZERO, new Vector2(100, 15), paddleImage);
-//        aiPaddle.setCenter(
-//                new Vector2(windowDimensions.x()/2, 30));
-//        this.gameObjects().addGameObject(aiPaddle);
+        createPaddle(imageReader, inputListener, windowDimensions);
+
 
         // Creating walls:
         createWalls(windowDimensions);
@@ -129,7 +141,8 @@ public class BrickerGameManager extends GameManager {
         float ballHeight = ball.getCenter().y();
         String prompt = "";
         // if we lost:
-        if (ballHeight < 0 || bricksCountDown.value() == numBricksPerRow * numRows) {
+        if (ballHeight < 0 || bricksCountDown.value() == numBricksPerRow * numRows ||
+                inputListener.isKeyPressed(KeyEvent.VK_W)) {
             prompt = "You Win!";
         }
 
@@ -137,10 +150,8 @@ public class BrickerGameManager extends GameManager {
         if (ballHeight > windowDimensions.y()) {
             livesLeft--;
             System.out.println("Lives: " + livesLeft);
-            // TODO: create new ball
             resetBall();
             updateLives(false);
-//            windowController.resetGame();
 
         }
         if (livesLeft <=0) {
@@ -158,6 +169,9 @@ public class BrickerGameManager extends GameManager {
         }
     }
 
+    private void checkForPacksStatus(){
+        // TODO: how to check about the packs?
+    }
 
     private void createWalls(Vector2 windowDimensions) {
         // TODO: CODING STYLE
@@ -231,26 +245,27 @@ public class BrickerGameManager extends GameManager {
 //        // TODO MAAYAN: needs to show in renderer
 //
 //    }
-private void createLives(ImageReader imageReader, Vector2 windowDimensions, int numHearts) {
-    this.lifeNumeric = new LifeNumeric(NUM_OF_LIVES);
-    this.heartsList = new ArrayList<>(); // Initialize the list
-    Renderable heartImage = imageReader.readImage("assets/heart.png", true);
+    private void createLives(ImageReader imageReader, Vector2 windowDimensions, int numHearts) {
+        this.lifeNumeric = new LifeNumeric(NUM_OF_LIVES);
+        this.heartsList = new ArrayList<>(); // Initialize the list
+        Renderable heartImage = imageReader.readImage("assets/heart.png", true);
 
-    for (int i = 0; i < numHearts; i++) {
-        Vector2 heartSize = new Vector2(30, 30);
-        float corX = windowDimensions.x() - (i + 1) * (heartSize.x() + 5); // Position hearts horizontally
-        float corY = 20; // Fixed vertical position
-        Vector2 heartCoors = new Vector2(corX, corY);
+        for (int i = 0; i < numHearts; i++) {
+            Vector2 heartSize = new Vector2(HEART_SIZE, HEART_SIZE);
+            float corX = windowDimensions.x() - (i + 1) * (heartSize.x() + 5); // Position hearts horizontally
+            float corY = 20; // Fixed vertical position
+            Vector2 heartCoors = new Vector2(corX, corY);
 
-        Hearts heart = new Hearts(heartCoors, heartSize, heartImage);
-        heartsList.add(heart); // Add heart to the list
-        this.gameObjects().addGameObject(heart, Layer.UI);
-    }
+            Hearts heart = new Hearts(heartCoors, heartSize, heartImage);
+            heartsList.add(heart); // Add heart to the list
+            this.gameObjects().addGameObject(heart, Layer.UI);
+        }
 }
 
 
     private GameObject lifeTextObject; // Add this field to store the text object
 
+    // TODO for MAAYAN: switch to CONSTANT
     private void createLifeText(int numLives) {
         TextRenderable textRenderable = new TextRenderable("Lives: " + numLives);
 
@@ -280,6 +295,7 @@ private void createLives(ImageReader imageReader, Vector2 windowDimensions, int 
     }
 
 
+    // TODO for MAAYAN: why not use the method?
     private void deleteLives() {
         for (Hearts heart : heartsList) {
             this.gameObjects().removeGameObject(heart, Layer.UI);
@@ -297,6 +313,8 @@ private void createLives(ImageReader imageReader, Vector2 windowDimensions, int 
             this.lifeNumeric.loseLife();
         }
 
+        // TODO for MAAYAN: if the method checks if to delete or add,
+        //  why it always remove?
         // Update hearts
         this.deleteLives();
         int numLives = this.lifeNumeric.getNumLives();
@@ -340,7 +358,8 @@ private void createLives(ImageReader imageReader, Vector2 windowDimensions, int 
     }
 
     private void createPaddle(ImageReader imageReader, UserInputListener inputListener,
-                              Vector2 windowDimensions, Renderable paddleImage) {
+                              Vector2 windowDimensions) {
+        Renderable paddleImage = imageReader.readImage("assets/paddle.png", true);
         GameObject paddle = new Paddle(
                 Vector2.ZERO,
                 new Vector2(PADDLE_WIDTH, PADDLE_HEIGHT),
@@ -376,18 +395,63 @@ private void createLives(ImageReader imageReader, Vector2 windowDimensions, int 
                              Vector2 brickDims, Vector2 brickCoors) {
         // TODO MAAYAN: fix the bricks layer according to 1.7 note 4
         Renderable brickImage = imageReader.readImage("assets/brick.png", false);
-        BasicCollisionStrategy basicCollisionStrategy =
-                new BasicCollisionStrategy(this.gameObjects(), this);
+
+        // create strategy:
+        CollisionStrategy collisionStrategy = createBrickCollisionStrategy();
 
         Brick brick = new Brick(Vector2.ZERO,
                 new Vector2(brickDims),
                 brickImage,
-                basicCollisionStrategy);
+                collisionStrategy);
         brick.setCenter(brickCoors);
 
         this.gameObjects().addGameObject(brick);
 
     }
+    private CollisionStrategy createBrickCollisionStrategy() {
+        Random random = new Random();
+
+        // Define weights for each strategy according to Instructions
+        float[] weights = {0.5f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f};
+        float[] cumulativeProbabilities = new float[weights.length];
+
+        // Compute cumulative probabilities
+        cumulativeProbabilities[0] = weights[0];
+        for (int i = 1; i < weights.length; i++) {
+            cumulativeProbabilities[i] = cumulativeProbabilities[i - 1] + weights[i];
+        }
+
+        // Generate a random number between 0 and 1
+        float randomValue = random.nextFloat();
+
+        // Add the relevant strategy:
+        // TODO FOR MAAYAN: add the relevant parameters for your strategies
+        for (int i = 0; i < cumulativeProbabilities.length; i++) {
+            if (randomValue <= cumulativeProbabilities[i]) {
+                switch (i) {
+                    case 0:
+                        return new BasicCollisionStrategy(this.gameObjects(), this);
+                    case 1:
+                        return new ExstraPackStrategy(this,
+                                BALL_SPEED,
+                                windowDimensions,
+                                BALL_RADIUS,
+                                imageReader,
+                                soundReader);
+                    case 2:
+                        return new ExstraPaddleStrategy();
+                    case 3:
+                        return new TurboStrategy();
+                    case 4:
+                        return new ReturnLiveStrategy();
+                    case 5:
+                        return new MultipleBehaviorsStrategy();
+                }
+            }
+        }
+        return null;
+    }
+
 
     public static void main(String[] args) {
         int numBricks = NUM_BRICKS_PER_ROW;

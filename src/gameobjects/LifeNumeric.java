@@ -1,5 +1,7 @@
 package gameobjects;
 
+// TODO FOR MAAYAN: why numeric lives and not lives? and add the graphic here
+
 public class LifeNumeric {
     private static final int MAX_LIFES = 4;
     private int numLives;
