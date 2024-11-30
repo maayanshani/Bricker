@@ -5,6 +5,7 @@ import danogl.gui.rendering.Renderable;
 import danogl.util.Vector2;
 
 public class ExtraPaddle extends Paddle{
+    int numCollision;
     /**
      * Construct a new GameObject instance.
      *
@@ -18,5 +19,6 @@ public class ExtraPaddle extends Paddle{
      */
     public ExtraPaddle(Vector2 topLeftCorner, Vector2 dimensions, Renderable renderable, UserInputListener inputListener, Vector2 windowDimensions) {
         super(topLeftCorner, dimensions, renderable, inputListener, windowDimensions);
+        numCollision = 0;
     }
 }

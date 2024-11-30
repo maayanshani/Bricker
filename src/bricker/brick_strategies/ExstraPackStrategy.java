@@ -21,7 +21,6 @@ public class ExstraPackStrategy implements CollisionStrategy{
     private SoundReader soundReader;
 
     public ExstraPackStrategy(bricker.main.BrickerGameManager gameManager,
-
                               float packSpeed, Vector2 windowDimensions,
                               float packRadius, ImageReader imageReader, SoundReader soundReader) {
 

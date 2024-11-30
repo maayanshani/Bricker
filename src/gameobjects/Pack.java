@@ -29,7 +29,7 @@ public class Pack extends Ball{
         this.collisionSound = collisionSound;
     }
 
-    // TODO: needed?
+    // TODO: didnt understand the collisions instructions
     @Override
     public void onCollisionEnter(GameObject other,
                                  Collision collision) {

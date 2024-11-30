@@ -34,6 +34,11 @@ public class Ball extends GameObject {
         Vector2 newVel = getVelocity().flipped(collision.getNormal());
         setVelocity(newVel);
         collisionSound.play();
+        if (other instanceof Paddle) {
+            int currentCollisionCounter = ((Paddle) other).getNumCollision();
+            System.out.println(currentCollisionCounter);
+            ((Paddle) other).addCollision();
+        }
 
         collisionCounter++;
     }

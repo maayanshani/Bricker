@@ -11,6 +11,7 @@ public class Paddle extends GameObject {
     private static final float MOVEMENT_SPEED = 300;
     private UserInputListener inputListener;
     private Vector2 windowDimensions;
+    private int numCollision;
 
     /**
      * Construct a new GameObject instance.
@@ -29,6 +30,17 @@ public class Paddle extends GameObject {
         super(topLeftCorner, dimensions, renderable);
         this.inputListener = inputListener;
         this.windowDimensions = windowDimensions;
+        this.numCollision = 0;
+    }
+
+    // TODO: not in the OG API, needed to be explaind in the README:
+    public int getNumCollision() {
+        return numCollision;
+    }
+
+    // TODO: not in the OG API, needed to be explaind in the README:
+    public void addCollision() {
+        this.numCollision++;
     }
 
     @Override
