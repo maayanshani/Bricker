@@ -33,13 +33,14 @@ public class BrickerGameManager extends GameManager {
     // CONSTANTS:
     private static final int PADDLE_HEIGHT = 15;
     private static final int PADDLE_WIDTH = 100;
+    private static final int MAX_EXTRA_PADDLE_HITS = 4;
     private static final int BALL_RADIUS = 20;
     private static final float BALL_SPEED = 250;
     private static final int NUM_BRICKS_PER_ROW = 8;
     private static final int NUM_ROWS = 7;
     private static final int BRICK_HEIGHT = 15;
     private static final int WALL_WIDTH = 10;
-    private static final int NUM_OF_LIVES = 3;
+    private static final int NUM_OF_LIVES_START = 3;
     private static final int HEART_SIZE = 30;
     private static final int HEART_COR_Y = 20;
     private static final int MARGIN = 5;
@@ -57,11 +58,11 @@ public class BrickerGameManager extends GameManager {
     // TODO for MAAYAN: we can use mutable array?
     // Don't think cause i delete and create a new one when numLives change
     // You used mutable array (this: <>)
-    private List<Heart> heartsList;
+    private List<Heart> heartsLifeList;
     private LifeNumeric lifeNumeric;
     private GameObject lifeTextObject;
-    private int heartCounter;
-    private Heart[] heartList;
+    private int movingHearsCounter;
+    private Heart[] movingHeartsList;
 
     // Initialization fields:
     private Ball ball;
@@ -99,8 +100,8 @@ public class BrickerGameManager extends GameManager {
         this.packCounter = 0;
         // TODO: can be replaced with mutable array
         this.packsList = new Pack[numBricksPerRow*numRows*2];
-        this.heartList = new Heart[numBricksPerRow*numRows*2];
-        this.lifeNumeric = new LifeNumeric(NUM_OF_LIVES);
+        this.movingHeartsList = new Heart[numBricksPerRow*numRows*2];
+        this.lifeNumeric = new LifeNumeric(NUM_OF_LIVES_START);
         this.extraPaddleOn = false;
         this.extraPaddle = null;
     }
@@ -156,8 +157,8 @@ public class BrickerGameManager extends GameManager {
         }
         else if (object instanceof Heart) {
             this.gameObjects().addGameObject(object);
-            this.heartList[packCounter] = (Heart) object;
-            this.heartCounter++;
+            this.movingHeartsList[movingHearsCounter] = (Heart) object;
+            this.movingHearsCounter++;
         }
         else {
             this.gameObjects().addGameObject(object);
@@ -197,7 +198,6 @@ public class BrickerGameManager extends GameManager {
         // user paddle:
         createPaddle(imageReader, inputListener, windowDimensions);
 
-
         // Creating walls:
         createWalls(windowDimensions);
 
@@ -205,9 +205,8 @@ public class BrickerGameManager extends GameManager {
         createBricks(windowDimensions, imageReader);
 
         // Creating lives:
-        createLives(imageReader, windowDimensions, NUM_OF_LIVES);
-        createLifeText(NUM_OF_LIVES);
-
+        createLives(imageReader, windowDimensions, NUM_OF_LIVES_START);
+        createLifeText(NUM_OF_LIVES_START);
     }
 
     /**
@@ -247,14 +246,14 @@ public class BrickerGameManager extends GameManager {
     }
 
     private void checkHeartsStatus() {
-        for (int i = 0; i < heartList.length; i++) {
-            Heart currentHeart = heartList[i];
+        for (int i = 0; i < movingHeartsList.length; i++) {
+            Heart currentHeart = movingHeartsList[i];
             if (currentHeart != null) {
                 float heartHeight = currentHeart.getCenter().y();
                 if (heartHeight > windowDimensions.y()) {
                     removeObject(currentHeart);
-                    heartList[i] = null;
-                    heartCounter--;
+                    movingHeartsList[i] = null;
+                    movingHearsCounter--;
                 }
             }
         }
@@ -262,7 +261,7 @@ public class BrickerGameManager extends GameManager {
 
     private void checkExtraPaddleStatus(){
         if (extraPaddle!=null) {
-            if (extraPaddle.getNumCollision() == 4) {
+            if (extraPaddle.getNumCollision() >= MAX_EXTRA_PADDLE_HITS) {
                 removeObject(extraPaddle);
             }
         }
@@ -292,7 +291,7 @@ public class BrickerGameManager extends GameManager {
         if (!prompt.isEmpty()) {
             prompt += " Play again?";
             if (windowController.openYesNoDialog(prompt)) {
-                this.lifeNumeric = new LifeNumeric(NUM_OF_LIVES);
+                this.lifeNumeric = new LifeNumeric(NUM_OF_LIVES_START);
                 windowController.resetGame();
             } else {
                 windowController.closeWindow();
@@ -338,7 +337,7 @@ public class BrickerGameManager extends GameManager {
     }
 
     private void createLives(ImageReader imageReader, Vector2 windowDimensions, int numHearts) {
-        this.heartsList = new ArrayList<>(); // Initialize the list
+        this.heartsLifeList = new ArrayList<>(); // Initialize the list
         Renderable heartImage = imageReader.readImage("assets/heart.png", true);
 
         for (int i = 0; i < numHearts; i++) {
@@ -348,13 +347,12 @@ public class BrickerGameManager extends GameManager {
             Vector2 heartCoors = new Vector2(corX, HEART_COR_Y);
 
             Heart heart = new Heart(heartCoors, heartSize, heartImage);
-            heartsList.add(heart); // Add heart to the list
+            heartsLifeList.add(heart); // Add heart to the list
             this.gameObjects().addGameObject(heart, Layer.UI);
         }
 }
 
 
-    // TODO for MAAYAN: switch to CONSTANT.     why?
     private void createLifeText(int numLives) {
         TextRenderable textRenderable = new TextRenderable("Lives: " + numLives);
 
@@ -382,18 +380,19 @@ public class BrickerGameManager extends GameManager {
     }
 
     private void deleteHearts() {
-        for (Heart heart : heartsList) {
+        for (Heart heart : heartsLifeList) {
             this.gameObjects().removeGameObject(heart, Layer.UI);
         }
     }
 
+    // todo: i changed it to public. need to explain
     /**
      * Updates the player's lives both numerically and visually.
      * Adjusts the life counter, refreshes the hearts, and updates the life text.
      *
      * @param add True to add a life, false to remove one.
      */
-    private void updateLives(boolean add) {
+    public void updateLives(boolean add) {
 //        System.out.println("Updating lives...");
 
         // Update the numeric life counter
@@ -499,9 +498,9 @@ public class BrickerGameManager extends GameManager {
         Random random = new Random();
 
         // Define weights for each strategy according to Instructions
-        float[] weights = {0.5f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f};
+//        float[] weights = {0.5f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f};
 //        // TODO: delete wrong probabilities, its only for checking the strategies:
-//        float[] weights = {0f, 0f, 1f, 0f, 0f, 0f};
+        float[] weights = {0.2f, 0.2f, 0.2f, 0f, 0.4f, 0f};
         float[] cumulativeProbabilities = new float[weights.length];
 
         // Compute cumulative probabilities
