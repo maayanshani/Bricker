@@ -39,11 +39,10 @@ public class Ball extends GameObject {
             System.out.println(currentCollisionCounter);
             ((Paddle) other).addCollision();
         }
-
+        // TODO: maybe only in turbo mode?
         collisionCounter++;
     }
 
-    // TODO: what is these?
     public int getCollisionCounter() {
         return collisionCounter;
     }

@@ -56,8 +56,12 @@ public class BrickerGameManager extends GameManager {
     private int livesLeft;
     // TODO for MAAYAN: we can use mutable array?
     // Don't think cause i delete and create a new one when numLives change
+    // You used mutable array (this: <>)
     private List<Heart> heartsList;
     private LifeNumeric lifeNumeric;
+    private GameObject lifeTextObject;
+    private int heartCounter;
+    private Heart[] heartList;
 
     // Initialization fields:
     private Ball ball;
@@ -74,8 +78,6 @@ public class BrickerGameManager extends GameManager {
     // Paddles fields:
     private boolean extraPaddleOn;
     private Paddle extraPaddle;
-    private int heartCounter;
-    private Heart[] heartList;
 
     /**
      * Constructor for the BrickerGameManager.
@@ -123,7 +125,7 @@ public class BrickerGameManager extends GameManager {
         boolean removed = this.gameObjects().removeGameObject(object);
         if (removed && object instanceof Brick) {
             this.bricksCountDown.increment();
-            System.out.println("Removed Bricks: " + this.bricksCountDown.value());
+//            System.out.println("Removed Bricks: " + this.bricksCountDown.value());
         }
         if (removed && object instanceof Paddle) {
             extraPaddle = null;
@@ -145,13 +147,14 @@ public class BrickerGameManager extends GameManager {
             this.packCounter++;
         }
         // if it's a paddle, check there aren't one already:
-        if (object instanceof Paddle) {
+        else if (object instanceof Paddle) {
             if (!extraPaddleOn) {
                 this.gameObjects().addGameObject(object);
+                extraPaddle = (Paddle) object;
                 extraPaddleOn = true;
             }
         }
-        if (object instanceof Heart) {
+        else if (object instanceof Heart) {
             this.gameObjects().addGameObject(object);
             this.heartList[packCounter] = (Heart) object;
             this.heartCounter++;
@@ -220,6 +223,13 @@ public class BrickerGameManager extends GameManager {
         checkPacksStatus();
         checkExtraPaddleStatus();
         checkHeartsStatus();
+        checkTurboStatus();
+    }
+
+    private void checkTurboStatus() {
+        if (ball.getCollisionCounter()==6) {
+            // TODO ROTEM: change back to un-Turbo
+        }
     }
 
     private void checkPacksStatus() {
@@ -235,6 +245,7 @@ public class BrickerGameManager extends GameManager {
             }
         }
     }
+
     private void checkHeartsStatus() {
         for (int i = 0; i < heartList.length; i++) {
             Heart currentHeart = heartList[i];
@@ -250,9 +261,10 @@ public class BrickerGameManager extends GameManager {
     }
 
     private void checkExtraPaddleStatus(){
-        if (extraPaddle!=null && extraPaddle.getNumCollision()==4) {
-            // TODO ROTEM: FIX IT
-            removeObject(extraPaddle);
+        if (extraPaddle!=null) {
+            if (extraPaddle.getNumCollision() == 4) {
+                removeObject(extraPaddle);
+            }
         }
     }
 
@@ -270,7 +282,7 @@ public class BrickerGameManager extends GameManager {
         if (ballHeight > windowDimensions.y()) {
             resetBall();
             updateLives(false);
-            System.out.println("Lives: " + this.lifeNumeric.getNumLives());
+//            System.out.println("Lives: " + this.lifeNumeric.getNumLives());
         }
 
         if (this.lifeNumeric.getNumLives() <=0) {
@@ -341,7 +353,6 @@ public class BrickerGameManager extends GameManager {
         }
 }
 
-    private GameObject lifeTextObject; // Add this field to store the text object
 
     // TODO for MAAYAN: switch to CONSTANT.     why?
     private void createLifeText(int numLives) {
@@ -383,7 +394,7 @@ public class BrickerGameManager extends GameManager {
      * @param add True to add a life, false to remove one.
      */
     private void updateLives(boolean add) {
-        System.out.println("Updating lives...");
+//        System.out.println("Updating lives...");
 
         // Update the numeric life counter
         if (add) {
@@ -394,7 +405,7 @@ public class BrickerGameManager extends GameManager {
 
         // Get the updated number of lives
         int numLives = this.lifeNumeric.getNumLives();
-        System.out.println("Updated Lives: " + numLives);
+//        System.out.println("Updated Lives: " + numLives);
 
         // Clear the old hearts and recreate based on new life count
         deleteHearts();
@@ -489,7 +500,7 @@ public class BrickerGameManager extends GameManager {
         // Define weights for each strategy according to Instructions
         float[] weights = {0.5f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f};
 //        // TODO: delete wrong probabilities, its only for checking the strategies:
-//        float[] weights = {0.5f, 0f, 0.5f, 0f, 0f, 0f};
+//        float[] weights = {0f, 0f, 1f, 0f, 0f, 0f};
         float[] cumulativeProbabilities = new float[weights.length];
 
         // Compute cumulative probabilities
