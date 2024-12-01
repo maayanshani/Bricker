@@ -42,10 +42,10 @@ public class ReturnLiveStrategy implements CollisionStrategy{
         Renderable heartImage = imageReader.readImage("assets/heart.png", false);
         Vector2 size = new Vector2(heartSize, heartSize);
         // TODO: un-comment when fixed
-//        CollisionStrategy HeartColideStrategy = new HeartColideStrategy(gameManager);
-//        this.heart = new Heart(Vector2.ZERO, size, heartImage, HeartColideStrategy);
-//        Vector2 currentPosition = object1.getCenter();
-//        moveHeart(currentPosition);
+        CollisionStrategy HeartColideStrategy = new HeartColideStrategy(gameManager);
+        this.heart = new Heart(Vector2.ZERO, size, heartImage, HeartColideStrategy);
+        Vector2 currentPosition = object1.getCenter();
+        moveHeart(currentPosition);
     }
 
     private void moveHeart(Vector2 currentPosition) {
