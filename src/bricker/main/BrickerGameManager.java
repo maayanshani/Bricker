@@ -59,9 +59,6 @@ public class BrickerGameManager extends GameManager {
 
     // Lives fields:
     private int livesLeft;
-    // TODO for MAAYAN: we can use mutable array?
-    // Don't think cause i delete and create a new one when numLives change
-    // You used mutable array (this: <>)
     private List<Heart> heartsLifeList;
     private LifeNumeric lifeNumeric;
     private GameObject lifeTextObject;
@@ -540,7 +537,7 @@ public class BrickerGameManager extends GameManager {
         // Define weights for each strategy according to Instructions
 //        float[] weights = {0.5f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f};
 //        // TODO: delete wrong probabilities, its only for checking the strategies:
-        float[] weights = {0.5f, 0.1f, 0.4f, 0f, 0f, 0f};
+        float[] weights = {0.5f, 0f, 0f, 0f, 0.5f, 0f};
         float[] cumulativeProbabilities = new float[weights.length];
 
         // Compute cumulative probabilities
