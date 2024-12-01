@@ -6,6 +6,7 @@ import danogl.gui.ImageReader;
 import danogl.gui.UserInputListener;
 import danogl.gui.rendering.Renderable;
 import danogl.util.Vector2;
+import gameobjects.Brick;
 import gameobjects.Heart;
 
 public class ReturnLiveStrategy implements CollisionStrategy{
@@ -37,13 +38,14 @@ public class ReturnLiveStrategy implements CollisionStrategy{
     public void onCollision(GameObject object1, GameObject object2) {
         System.out.println("life Brick");
         // remove the brick and create a heart in the middle that is going down
-        gameManager.removeObject(object1);
+        gameManager.removeBrick((Brick)object1);
         Renderable heartImage = imageReader.readImage("assets/heart.png", false);
         Vector2 size = new Vector2(heartSize, heartSize);
-        CollisionStrategy HeartColideStrategy = new HeartColideStrategy(gameManager);
-        this.heart = new Heart(Vector2.ZERO, size, heartImage, HeartColideStrategy);
-        Vector2 currentPosition = object1.getCenter();
-        moveHeart(currentPosition);
+        // TODO: un-comment when fixed
+//        CollisionStrategy HeartColideStrategy = new HeartColideStrategy(gameManager);
+//        this.heart = new Heart(Vector2.ZERO, size, heartImage, HeartColideStrategy);
+//        Vector2 currentPosition = object1.getCenter();
+//        moveHeart(currentPosition);
     }
 
     private void moveHeart(Vector2 currentPosition) {
@@ -58,6 +60,6 @@ public class ReturnLiveStrategy implements CollisionStrategy{
         heart.setCenter(windowDimensions.mult(0.5f));
         heart.setCenter(currentPosition);
 
-        gameManager.addObject(heart);
+        gameManager.addHeart(heart);
     }
 }

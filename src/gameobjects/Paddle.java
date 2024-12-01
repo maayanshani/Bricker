@@ -1,6 +1,7 @@
 package gameobjects;
 
 import danogl.GameObject;
+import danogl.collisions.Collision;
 import danogl.gui.UserInputListener;
 import danogl.gui.rendering.Renderable;
 import danogl.util.Vector2;
@@ -49,6 +50,7 @@ public class Paddle extends GameObject {
     public boolean isExtraPaddle() {
         return isExtraPaddle;
     }
+
 
     @Override
     public void update(float deltaTime) {

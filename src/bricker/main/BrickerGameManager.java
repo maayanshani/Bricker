@@ -21,10 +21,10 @@ import java.util.Random;
 
 /**
  * TODO:
- * 2. change Ex2 to Bricker - ROTEM
  * 3. fix all layers (addObject)- ball, bricks - MAAYAN
  * 4. bricks behind the lives dont disappears ? (not happens to me MAAYAN)
  * 5. if the user win, the game wont reset
+ * 6. using instanceof in Paddle class and TurboStrategy class
  *
  */
 
@@ -52,6 +52,10 @@ public class BrickerGameManager extends GameManager {
     private final int numBricksPerRow;
     private final int numRows;
     private danogl.util.Counter bricksCountDown;
+
+    // Ball fields:
+    private boolean isTurboOn;
+    private int numCollisions;
 
     // Lives fields:
     private int livesLeft;
@@ -98,23 +102,14 @@ public class BrickerGameManager extends GameManager {
         this.numRows = numRows;
         this.bricksCountDown = new danogl.util.Counter();
         this.packCounter = 0;
-        // TODO: can be replaced with mutable array
         this.packsList = new Pack[numBricksPerRow*numRows*2];
         this.movingHeartsList = new Heart[numBricksPerRow*numRows*2];
         this.lifeNumeric = new LifeNumeric(NUM_OF_LIVES_START);
         this.extraPaddleOn = false;
         this.extraPaddle = null;
+        this.isTurboOn = false;
     }
 
-    // TODO: needed?
-    /**
-     * Returns the number of bricks removed from the game.
-     *
-     * @return Number of bricks removed.
-     */
-    public int getBricksCountDown() {
-        return bricksCountDown.value();
-    }
 
     /**
      * Removes a specified game object from the game.
@@ -122,15 +117,22 @@ public class BrickerGameManager extends GameManager {
      *
      * @param object The game object to remove.
      */
-    public void removeObject(GameObject object) {
-        boolean removed = this.gameObjects().removeGameObject(object);
-        if (removed && object instanceof Brick) {
-            this.bricksCountDown.increment();
-//            System.out.println("Removed Bricks: " + this.bricksCountDown.value());
-        }
-        if (removed && object instanceof Paddle) {
+    public void removeGeneralObject(GameObject object) {
+        this.gameObjects().removeGameObject(object);
+    }
+
+    public void removePaddle(Paddle paddle) {
+        boolean removed = this.gameObjects().removeGameObject(paddle);
+        if (removed) {
             extraPaddle = null;
             extraPaddleOn = false;
+        }
+    }
+
+    public void removeBrick(Brick brick) {
+        boolean removed = this.gameObjects().removeGameObject(brick);
+        if (removed) {
+            this.bricksCountDown.increment();
         }
     }
 
@@ -140,29 +142,30 @@ public class BrickerGameManager extends GameManager {
      *
      * @param object The game object to add.
      */
-    public void addObject(GameObject object) {
-        // if it's a pack, add to the list and counter:
-        if (object instanceof Pack) {
-            this.gameObjects().addGameObject(object);
-            this.packsList[packCounter] = (Pack) object;
-            this.packCounter++;
+    public void addGeneralObject(GameObject object) {
+        this.gameObjects().addGameObject(object);
+    }
+
+    public void addHeart(GameObject object) {
+        this.gameObjects().addGameObject(object);
+        this.movingHeartsList[movingHearsCounter] = (Heart) object;
+        this.movingHearsCounter++;
+    }
+
+    public void addPaddle(Paddle paddle) {
+        // Check there aren't one already:
+        if (!extraPaddleOn) {
+            this.gameObjects().addGameObject(paddle);
+            extraPaddle = paddle;
+            extraPaddleOn = true;
         }
-        // if it's a paddle, check there aren't one already:
-        else if (object instanceof Paddle) {
-            if (!extraPaddleOn) {
-                this.gameObjects().addGameObject(object);
-                extraPaddle = (Paddle) object;
-                extraPaddleOn = true;
-            }
-        }
-        else if (object instanceof Heart) {
-            this.gameObjects().addGameObject(object);
-            this.movingHeartsList[movingHearsCounter] = (Heart) object;
-            this.movingHearsCounter++;
-        }
-        else {
-            this.gameObjects().addGameObject(object);
-        }
+    }
+
+    public void addPack(Pack pack) {
+        // Add to the list and counter:
+        this.gameObjects().addGameObject(pack);
+        this.packsList[packCounter] = pack;
+        this.packCounter++;
     }
 
     /**
@@ -194,8 +197,7 @@ public class BrickerGameManager extends GameManager {
         // Creating ball:
         createBall(imageReader, windowDimensions, soundReader);
 
-        // Creating paddles:
-        // user paddle:
+        // Creating paddle:
         createPaddle(imageReader, inputListener, windowDimensions);
 
         // Creating walls:
@@ -225,9 +227,30 @@ public class BrickerGameManager extends GameManager {
         checkTurboStatus();
     }
 
+    public boolean getTurboMode() {
+        return isTurboOn;
+    }
+
+    public void setTurboMode(int numCollisions) {
+        isTurboOn = true;
+        this.numCollisions = numCollisions;
+
+        // set the ball:
+        // Setting velocity:
+        ball.setVelocity(ball.getVelocity().mult(1.4f));
+
+        // setting color:
+        Renderable redBallImage = imageReader.readImage("assets/redball.png", true);
+        ball.renderer().setRenderable(redBallImage);
+
+    }
+
+
     private void checkTurboStatus() {
-        if (ball.getCollisionCounter()==6) {
-            // TODO ROTEM: change back to un-Turbo
+        if (isTurboOn && ball.getCollisionCounter() == 6+numCollisions) {
+            // change back to un-Turbo
+            resetBall();
+            isTurboOn = false;
         }
     }
 
@@ -237,7 +260,7 @@ public class BrickerGameManager extends GameManager {
             if (currentPack != null) {
                 float packHeight = currentPack.getCenter().y();
                 if (packHeight > windowDimensions.y()) {
-                    removeObject(currentPack);
+                    removeGeneralObject(currentPack);
                     packsList[i] = null;
                     packCounter--;
                 }
@@ -251,7 +274,7 @@ public class BrickerGameManager extends GameManager {
             if (currentHeart != null) {
                 float heartHeight = currentHeart.getCenter().y();
                 if (heartHeight > windowDimensions.y()) {
-                    removeObject(currentHeart);
+                    removeGeneralObject(currentHeart);
                     movingHeartsList[i] = null;
                     movingHearsCounter--;
                 }
@@ -262,7 +285,7 @@ public class BrickerGameManager extends GameManager {
     private void checkExtraPaddleStatus(){
         if (extraPaddle!=null) {
             if (extraPaddle.getNumCollision() >= MAX_EXTRA_PADDLE_HITS) {
-                removeObject(extraPaddle);
+                removePaddle(extraPaddle);
             }
         }
     }
@@ -279,6 +302,7 @@ public class BrickerGameManager extends GameManager {
 
         // if the user lost:
         if (ballHeight > windowDimensions.y()) {
+            isTurboOn = false;
             resetBall();
             updateLives(false);
 //            System.out.println("Lives: " + this.lifeNumeric.getNumLives());
@@ -352,7 +376,6 @@ public class BrickerGameManager extends GameManager {
         }
 }
 
-
     private void createLifeText(int numLives) {
         TextRenderable textRenderable = new TextRenderable("Lives: " + numLives);
 
@@ -366,9 +389,9 @@ public class BrickerGameManager extends GameManager {
         }
 
         // Position for the text
-        float corX = windowDimensions.x() - 100; // Position hearts horizontally
-        Vector2 textPosition = new Vector2(corX, TEXT_COR_Y); // Top-left corner
-        Vector2 textSize = new Vector2(TEXT_SIZE_X, TEXT_SIZE_Y); // Size for text
+        float corX = windowDimensions.x() - 100;
+        Vector2 textPosition = new Vector2(corX, TEXT_COR_Y);
+        Vector2 textSize = new Vector2(TEXT_SIZE_X, TEXT_SIZE_Y);
 
         // Remove the old text object if it exists
         if (lifeTextObject != null) {
@@ -426,22 +449,39 @@ public class BrickerGameManager extends GameManager {
     }
 
     private void resetBall() {
-        // Setting velocity:
-        float ballVelX = BALL_SPEED;
-        float ballVelY = BALL_SPEED;
-        Random rand = new Random();
-        if (rand.nextBoolean()) {
-            ballVelX *= -1;
-        }
-        if (rand.nextBoolean()) {
-            ballVelY *= -1;
-        }
-        ball.setVelocity(new Vector2(ballVelX, ballVelY));
+        // if Turbo is On:
+        if (isTurboOn) {
+            // Setting velocity:
+            ball.setVelocity(ball.getVelocity().mult(1/1.4f));
 
-        // Setting coordinates:
-        ball.setCenter(windowDimensions.mult(0.5f));
+            // setting color:
+            Renderable redBallImage = imageReader.readImage("assets/ball.png", true);
+            ball.renderer().setRenderable(redBallImage);
+        }
 
-        this.gameObjects().addGameObject(ball);
+        // else, fully-reset:
+        else {
+            // Setting velocity:
+            float ballVelX = BALL_SPEED;
+            float ballVelY = BALL_SPEED;
+
+            Random rand = new Random();
+            if (rand.nextBoolean()) {
+                ballVelX *= -1;
+            }
+            if (rand.nextBoolean()) {
+                ballVelY *= -1;
+            }
+            ball.setVelocity(new Vector2(ballVelX, ballVelY));
+
+            // Setting coordinates:
+            ball.setCenter(windowDimensions.mult(0.5f));
+
+            Renderable redBallImage = imageReader.readImage("assets/ball.png", true);
+            ball.renderer().setRenderable(redBallImage);
+
+            this.gameObjects().addGameObject(ball);
+        }
     }
 
     private void createPaddle(ImageReader imageReader, UserInputListener inputListener,
@@ -500,7 +540,7 @@ public class BrickerGameManager extends GameManager {
         // Define weights for each strategy according to Instructions
 //        float[] weights = {0.5f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f};
 //        // TODO: delete wrong probabilities, its only for checking the strategies:
-        float[] weights = {0.2f, 0.2f, 0.2f, 0f, 0.4f, 0f};
+        float[] weights = {0.5f, 0.1f, 0.4f, 0f, 0f, 0f};
         float[] cumulativeProbabilities = new float[weights.length];
 
         // Compute cumulative probabilities
@@ -518,7 +558,7 @@ public class BrickerGameManager extends GameManager {
             if (randomValue <= cumulativeProbabilities[i]) {
                 switch (i) {
                     case 0:
-                        return new BasicCollisionStrategy(this.gameObjects(), this);
+                        return new BasicCollisionStrategy(this);
                     case 1:
                         return new ExstraPackStrategy(this,
                                 BALL_SPEED,
@@ -534,7 +574,9 @@ public class BrickerGameManager extends GameManager {
                                 inputListener,
                                 imageReader);
                     case 3:
-                        return new TurboStrategy();
+                        return new TurboStrategy(this,
+                                imageReader,
+                                ball);
                     case 4:
                         return new ReturnLiveStrategy(this,
                                 windowDimensions,

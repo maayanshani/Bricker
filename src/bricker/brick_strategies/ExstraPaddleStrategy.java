@@ -6,6 +6,7 @@ import danogl.gui.ImageReader;
 import danogl.gui.UserInputListener;
 import danogl.gui.rendering.Renderable;
 import danogl.util.Vector2;
+import gameobjects.Brick;
 import gameobjects.Paddle;
 
 public class ExstraPaddleStrategy implements CollisionStrategy{
@@ -32,7 +33,7 @@ public class ExstraPaddleStrategy implements CollisionStrategy{
     @Override
     public void onCollision(GameObject object1, GameObject object2) {
         // remove the brick:
-        gameManager.removeObject(object1);
+        gameManager.removeBrick((Brick)object1);
 
         // create another paddle:
         Renderable paddleImage = imageReader.readImage("assets/paddle.png", true);
@@ -45,7 +46,7 @@ public class ExstraPaddleStrategy implements CollisionStrategy{
                 true);
         paddle.setCenter(
                 new Vector2(windowDimensions.x()/2, (int) (windowDimensions.y()/2)));
-        gameManager.addObject(paddle);
+        gameManager.addPaddle(paddle);
 
     }
 }

@@ -7,6 +7,7 @@ import danogl.gui.SoundReader;
 import danogl.gui.rendering.Renderable;
 import danogl.util.Vector2;
 import gameobjects.Ball;
+import gameobjects.Brick;
 import gameobjects.Pack;
 
 import java.util.Random;
@@ -37,7 +38,7 @@ public class ExstraPackStrategy implements CollisionStrategy{
     public void onCollision(GameObject object1, GameObject object2) {
         // create in the place of the brick to Packs:
         // remove brick:
-        gameManager.removeObject(object1);
+        gameManager.removeBrick((Brick)object1);
         // create 2 Packs:
         for (int i = 0; i < 2; i++) {
             Renderable packImage = imageReader.readImage("assets/mockBall.png", true);
@@ -63,10 +64,9 @@ public class ExstraPackStrategy implements CollisionStrategy{
         pack.setVelocity(new Vector2(velX, velY));
 
         // Setting coordinates:
-        pack.setCenter(windowDimensions.mult(0.5f));
         pack.setCenter(currentPosition);
 
-        gameManager.addObject(pack);
+        gameManager.addPack(pack);
     }
 
 }
