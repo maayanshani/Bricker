@@ -12,6 +12,7 @@ public class Paddle extends GameObject {
     private UserInputListener inputListener;
     private Vector2 windowDimensions;
     private int numCollision;
+    private boolean isExtraPaddle;
 
     /**
      * Construct a new GameObject instance.
@@ -26,11 +27,12 @@ public class Paddle extends GameObject {
      */
     public Paddle(Vector2 topLeftCorner,
                       Vector2 dimensions, Renderable renderable,
-                      UserInputListener inputListener, Vector2 windowDimensions) {
+                      UserInputListener inputListener, Vector2 windowDimensions, boolean isExtraPaddle) {
         super(topLeftCorner, dimensions, renderable);
         this.inputListener = inputListener;
         this.windowDimensions = windowDimensions;
         this.numCollision = 0;
+        this.isExtraPaddle = isExtraPaddle;
     }
 
     // TODO: not in the OG API, needed to be explaind in the README:
@@ -41,6 +43,11 @@ public class Paddle extends GameObject {
     // TODO: not in the OG API, needed to be explaind in the README:
     public void addCollision() {
         this.numCollision++;
+    }
+
+    // TODO: not in the OG API, needed to be explaind in the README:
+    public boolean isExtraPaddle() {
+        return isExtraPaddle;
     }
 
     @Override
