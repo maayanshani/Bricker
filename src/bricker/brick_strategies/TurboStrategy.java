@@ -2,30 +2,39 @@ package bricker.brick_strategies;
 
 import bricker.main.BrickerGameManager;
 import danogl.GameObject;
-import danogl.gui.ImageReader;
-import danogl.gui.Sound;
-import danogl.gui.SoundReader;
-import danogl.gui.rendering.Renderable;
-import danogl.util.Vector2;
 import gameobjects.Ball;
 import gameobjects.Brick;
-import gameobjects.Pack;
-
-import java.util.Random;
 
 public class TurboStrategy implements CollisionStrategy{
+    /**
+     * The game manager responsible for managing the game logic and controlling game state.
+     */
     private BrickerGameManager gameManager;
-    private ImageReader imageReader;
-    private SoundReader soundReader;
+
+    /**
+     * The ball object that may enter turbo mode depending on game events.
+     */
     private Ball ball;
 
+    /**
+     * Non-default Constructor
+     *
+     * @param gameManager   The game manager responsible for managing the game logic.
+     * @param ball          The ball that will potentially enter turbo mode.
+     */
     public TurboStrategy(BrickerGameManager gameManager,
-                         ImageReader imageReader, Ball ball) {
+                         Ball ball) {
         this.gameManager = gameManager;
-        this.imageReader = imageReader;
         this.ball = ball;
     }
 
+    /**
+     * Handles the collision between two GameObjects. In this case, it removes the brick
+     * from the game upon collision, and if the ball is in the right terms, turn Turbo-mode on.
+     *
+     * @param object1 The first GameObject involved in the collision.
+     * @param object2 The second GameObject involved in the collision.
+     */
     @Override
     public void onCollision(GameObject object1, GameObject object2) {
         // remove the brick:
@@ -41,5 +50,4 @@ public class TurboStrategy implements CollisionStrategy{
         }
 
     }
-
 }
