@@ -19,7 +19,6 @@ public class Pack extends Ball{
      *                       the GameObject will not be rendered.
      * @param collisionSound
      */
-    // TODO: when call pack, add new image, same sound, 3/4 size
     public Pack(Vector2 topLeftCorner,
                 Vector2 dimensions,
                 Renderable renderable,

@@ -16,20 +16,17 @@ public class ExstraPackStrategy implements CollisionStrategy{
     private bricker.main.BrickerGameManager gameManager;
     private Pack pack;
     private final float packSpeed;
-    private final Vector2 windowDimensions;
     private final float packRadius;
     private ImageReader imageReader;
     private SoundReader soundReader;
-    // todo: speed and radius should be CONST IMO
 
     public ExstraPackStrategy(bricker.main.BrickerGameManager gameManager,
-                              float packSpeed, Vector2 windowDimensions,
-                              float packRadius, ImageReader imageReader, SoundReader soundReader) {
+                              float ballSpeed, Vector2 windowDimensions,
+                              float ballRadius, ImageReader imageReader, SoundReader soundReader) {
 
         this.gameManager = gameManager;
-        this.packSpeed = packSpeed;
-        this.windowDimensions = windowDimensions;
-        this.packRadius = packRadius;
+        this.packSpeed = ballSpeed;
+        this.packRadius = ballRadius * 0.75f;
         this.imageReader = imageReader;
         this.soundReader = soundReader;
     }
@@ -47,6 +44,7 @@ public class ExstraPackStrategy implements CollisionStrategy{
                     new Vector2(packRadius, packRadius),
                     packImage,
                     collisionSound);
+            pack.setTag("Pack");
             Vector2 currentPosition = object1.getCenter();
             resetPack(currentPosition);
         }

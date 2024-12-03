@@ -34,10 +34,6 @@ public class Ball extends GameObject {
         Vector2 newVel = getVelocity().flipped(collision.getNormal());
         setVelocity(newVel);
         collisionSound.play();
-        // TODO: needs another solution, if i put it in the Paddle class it counts the collisions with the walls.
-        if (other instanceof Paddle) {
-            ((Paddle) other).addCollision();
-        }
         collisionCounter++;
     }
 

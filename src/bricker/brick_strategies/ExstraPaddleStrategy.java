@@ -44,6 +44,7 @@ public class ExstraPaddleStrategy implements CollisionStrategy{
                 inputListener,
                 windowDimensions,
                 true);
+        paddle.setTag("Paddle");
         paddle.setCenter(
                 new Vector2(windowDimensions.x()/2, (int) (windowDimensions.y()/2)));
         gameManager.addPaddle(paddle);

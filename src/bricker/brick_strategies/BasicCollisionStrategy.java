@@ -5,7 +5,6 @@ import danogl.collisions.GameObjectCollection;
 import gameobjects.Brick;
 
 public class BasicCollisionStrategy implements CollisionStrategy {
-    //TODO ROTEM: is the first field needed?
     private bricker.main.BrickerGameManager gameManager;
 
     public BasicCollisionStrategy(bricker.main.BrickerGameManager gameManager) {

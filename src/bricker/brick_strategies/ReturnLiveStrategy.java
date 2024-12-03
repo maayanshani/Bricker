@@ -36,20 +36,18 @@ public class ReturnLiveStrategy implements CollisionStrategy{
 
     @Override
     public void onCollision(GameObject object1, GameObject object2) {
-        System.out.println("life Brick");
         // remove the brick and create a heart in the middle that is going down
         gameManager.removeBrick((Brick)object1);
         Renderable heartImage = imageReader.readImage("assets/heart.png", false);
         Vector2 size = new Vector2(heartSize, heartSize);
-        // TODO: un-comment when fixed
         CollisionStrategy HeartColideStrategy = new HeartColideStrategy(gameManager);
         this.heart = new Heart(Vector2.ZERO, size, heartImage, HeartColideStrategy);
+        this.heart.setTag("Heart");
         Vector2 currentPosition = object1.getCenter();
         moveHeart(currentPosition);
     }
 
     private void moveHeart(Vector2 currentPosition) {
-        System.out.println("life createsd");
 
         float velX = (float)0;
         float velY = (float) HEART_VEL;

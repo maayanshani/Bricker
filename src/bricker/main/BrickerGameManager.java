@@ -21,11 +21,9 @@ import java.util.Random;
 
 /**
  * TODO:
- * 3. fix all layers (addObject)- ball, bricks - MAAYAN
- * 4. bricks behind the lives dont disappears ? (not happens to me MAAYAN)
- * 5. if the user win, the game wont reset
- * 6. using instanceof in Paddle class and TurboStrategy class
- *
+ * 1. 5th strategy
+ * 2. move HeartColide out of the CollisionStrategy interface
+ * 3. return to the right probabilities in createBrickCollisionStrategy method
  */
 
 
@@ -242,7 +240,6 @@ public class BrickerGameManager extends GameManager {
 
     }
 
-
     private void checkTurboStatus() {
         if (isTurboOn && ball.getCollisionCounter() == 6+numCollisions) {
             // change back to un-Turbo
@@ -302,7 +299,6 @@ public class BrickerGameManager extends GameManager {
             isTurboOn = false;
             resetBall();
             updateLives(false);
-//            System.out.println("Lives: " + this.lifeNumeric.getNumLives());
         }
 
         if (this.lifeNumeric.getNumLives() <=0) {
@@ -313,6 +309,8 @@ public class BrickerGameManager extends GameManager {
             prompt += " Play again?";
             if (windowController.openYesNoDialog(prompt)) {
                 this.lifeNumeric = new LifeNumeric(NUM_OF_LIVES_START);
+                bricksCountDown.reset(); // Reset brick counter (or similar logic)
+                this.isTurboOn = false;
                 windowController.resetGame();
             } else {
                 windowController.closeWindow();
@@ -321,17 +319,13 @@ public class BrickerGameManager extends GameManager {
     }
 
     private void createWalls(Vector2 windowDimensions) {
-        // TODO: dont show walls
-
         Color borderColor = Color.blue;
         // create side walls
         int[] wallsWidth = new int[]{(int) (windowDimensions.x()-MARGIN), MARGIN};
         int wallHeight = (int)windowDimensions.y();
 
-        RectangleRenderable sideWallRectangle = new RectangleRenderable(borderColor);
-
         for (int i = 0; i < wallsWidth.length; i++) {
-            GameObject sideWall = new GameObject(Vector2.ZERO, new Vector2(WALL_WIDTH, wallHeight), sideWallRectangle);
+            GameObject sideWall = new GameObject(Vector2.ZERO, new Vector2(WALL_WIDTH, wallHeight), null);
             sideWall.setCenter(
                     new Vector2(wallsWidth[i], windowDimensions.y()/2));
             this.gameObjects().addGameObject(sideWall);
@@ -340,10 +334,9 @@ public class BrickerGameManager extends GameManager {
         // create upper wall:
         int upperWallWidth = (int)windowDimensions.x();
 
-        RectangleRenderable upperWallRectangle = new RectangleRenderable(borderColor);
         GameObject upperWall = new GameObject(Vector2.ZERO,
                 new Vector2(upperWallWidth, WALL_WIDTH),
-                upperWallRectangle);
+                null);
         upperWall.setCenter(
                 new Vector2(windowDimensions.x()/2, WALL_WIDTH/2));
         this.gameObjects().addGameObject(upperWall);
@@ -368,6 +361,7 @@ public class BrickerGameManager extends GameManager {
             Vector2 heartCoors = new Vector2(corX, HEART_COR_Y);
 
             Heart heart = new Heart(heartCoors, heartSize, heartImage);
+            heart.setTag("Heart");
             heartsLifeList.add(heart); // Add heart to the list
             this.gameObjects().addGameObject(heart, Layer.UI);
         }
@@ -413,8 +407,6 @@ public class BrickerGameManager extends GameManager {
      * @param add True to add a life, false to remove one.
      */
     public void updateLives(boolean add) {
-//        System.out.println("Updating lives...");
-
         // Update the numeric life counter
         if (add) {
             this.lifeNumeric.addLife();
@@ -424,7 +416,6 @@ public class BrickerGameManager extends GameManager {
 
         // Get the updated number of lives
         int numLives = this.lifeNumeric.getNumLives();
-//        System.out.println("Updated Lives: " + numLives);
 
         // Clear the old hearts and recreate based on new life count
         deleteHearts();
@@ -441,6 +432,7 @@ public class BrickerGameManager extends GameManager {
         Renderable ballImage = imageReader.readImage("assets/ball.png", true);
         Sound collisionSound = soundReader.readSound("assets/blop.wav");
         ball = new Ball(Vector2.ZERO, new Vector2(BALL_RADIUS, BALL_RADIUS), ballImage, collisionSound);
+        ball.setTag("Ball");
 
         resetBall();
     }
@@ -491,6 +483,7 @@ public class BrickerGameManager extends GameManager {
                 inputListener,
                 windowDimensions,
                 false);
+        paddle.setTag("Paddle");
         paddle.setCenter(
                 new Vector2(windowDimensions.x()/2, (int) (windowDimensions.y()-WALL_WIDTH)));
         this.gameObjects().addGameObject(paddle);
@@ -516,7 +509,6 @@ public class BrickerGameManager extends GameManager {
 
     private void createBrick(ImageReader imageReader,
                              Vector2 brickDims, Vector2 brickCoors) {
-        // TODO MAAYAN: fix the bricks layer according to 1.7 note 4
         Renderable brickImage = imageReader.readImage("assets/brick.png", false);
 
         // create strategy:
@@ -526,6 +518,7 @@ public class BrickerGameManager extends GameManager {
                 new Vector2(brickDims),
                 brickImage,
                 collisionStrategy);
+        brick.setTag("Brick");
         brick.setCenter(brickCoors);
 
         this.gameObjects().addGameObject(brick);
@@ -537,7 +530,7 @@ public class BrickerGameManager extends GameManager {
         // Define weights for each strategy according to Instructions
 //        float[] weights = {0.5f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f};
 //        // TODO: delete wrong probabilities, its only for checking the strategies:
-        float[] weights = {0.5f, 0f, 0f, 0f, 0.5f, 0f};
+        float[] weights = {0.5f, 0f, 0.5f, 0f, 0f, 0f};
         float[] cumulativeProbabilities = new float[weights.length];
 
         // Compute cumulative probabilities

@@ -32,8 +32,7 @@ public class TurboStrategy implements CollisionStrategy{
         gameManager.removeBrick((Brick)object1);
 
         // if its Ball and not Pack and turbo isn't on, make the ball "Turbo":
-        // TODO: needs another solution:
-        if (!(object2 instanceof Pack) && !gameManager.getTurboMode()){
+        if (!("Pack".equals(object2.getTag())) && !gameManager.getTurboMode()){
 
             // change the ball mode:
             int numCollisions = ball.getCollisionCounter();

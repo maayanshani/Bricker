@@ -12,7 +12,7 @@ public class Paddle extends GameObject {
     private static final float MOVEMENT_SPEED = 300;
     private UserInputListener inputListener;
     private Vector2 windowDimensions;
-    private int numCollision;
+    private int numBallCollisions;
     private boolean isExtraPaddle;
 
     /**
@@ -32,18 +32,13 @@ public class Paddle extends GameObject {
         super(topLeftCorner, dimensions, renderable);
         this.inputListener = inputListener;
         this.windowDimensions = windowDimensions;
-        this.numCollision = 0;
+        this.numBallCollisions = 0;
         this.isExtraPaddle = isExtraPaddle;
     }
 
     // TODO: not in the OG API, needed to be explaind in the README:
     public int getNumCollision() {
-        return numCollision;
-    }
-
-    // TODO: not in the OG API, needed to be explaind in the README:
-    public void addCollision() {
-        this.numCollision++;
+        return numBallCollisions;
     }
 
     // TODO: not in the OG API, needed to be explaind in the README:
@@ -57,7 +52,6 @@ public class Paddle extends GameObject {
         super.update(deltaTime);
         Vector2 movementDirection = Vector2.ZERO;
 
-        // TODO: didnt use setTopLeft, just didnt allow the update
         if (inputListener.isKeyPressed(KeyEvent.VK_LEFT) &&
                 getTopLeftCorner().x() >= 0) {
             movementDirection = movementDirection.add(Vector2.LEFT);
@@ -68,5 +62,13 @@ public class Paddle extends GameObject {
         }
 
         setVelocity(movementDirection.mult(MOVEMENT_SPEED));
+    }
+
+    @Override
+    public void onCollisionEnter(GameObject other, Collision collision) {
+        super.onCollisionEnter(other, collision);
+        if ("Ball".equals(other.getTag()) || "Pack".equals(other.getTag())) {
+            numBallCollisions++;
+        }
     }
 }
