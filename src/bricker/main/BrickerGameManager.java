@@ -6,7 +6,6 @@ import danogl.GameObject;
 import danogl.collisions.Layer;
 import danogl.components.CoordinateSpace;
 import danogl.gui.*;
-import danogl.gui.rendering.RectangleRenderable;
 import danogl.gui.rendering.Renderable;
 import danogl.gui.rendering.TextRenderable;
 import danogl.util.Vector2;
@@ -17,13 +16,12 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Manages the Bricker game, handling initialization, game updates, object creation, and collision logic.
  * <p>
  * TODO:
- * 1. 5th strategy
- * 2. move HeartColide out of the CollisionStrategy interface
  * 3. return to the right probabilities in createBrickCollisionStrategy method
  * 4. maybe there is no use for Pack class?
  * 5. i moved the probabilities to be static final
@@ -47,10 +45,18 @@ public class BrickerGameManager extends GameManager {
     private static final int TEXT_SIZE_X = 80;
     private static final int TEXT_SIZE_Y = 20;
     private static final int TEXT_COR_Y = 50;
+    private static final int BASIC = 0;
+    private static final int EXTRA_PACK = 1;
+    private static final int EXTRA_PADDLE = 2;
+    private static final int TURBO = 3;
+    private static final int RETURN_LIVE = 4;
+    private static final int MULTIPLE_BEHAVIORS = 5;
+
     // TODO: delete wrong probabilities, its only for checking the strategies:
-    private static final float[] BRICKS_PROBABILITIES = {0.5f, 0.5f, 0f, 0f, 0f, 0f};
+    private static final float[] STRATEGY_PROBABILITIES = {0f, 0f, 0f, 0f, 0f, 1f};
+
     // right probabilities:
-    // private static final float[] BRICKS_PROBABILITIES = {0.5f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f};
+//     private static final float[] STRATEGY_PROBABILITIES = {0.5f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f};
 
 
     // Bricks fields:
@@ -80,12 +86,6 @@ public class BrickerGameManager extends GameManager {
      */
     private int numCollisions;
 
-    // Lives fields:
-    /**
-     * The number of lives left for the player.
-     */
-    private int livesLeft;
-
     /**
      * List of hearts representing the player's lives.
      */
@@ -104,12 +104,13 @@ public class BrickerGameManager extends GameManager {
     /**
      * Counter for tracking the moving hearts in the game.
      */
-    private int movingHearsCounter;
+    private int movingHeartsCounter;
 
     /**
      * Array of moving hearts.
      */
-    private Heart[] movingHeartsList;
+//    private Heart[] movingHeartsList;
+    private List<Heart> movingHeartsList;
 
     // Initialization fields:
     /**
@@ -146,7 +147,7 @@ public class BrickerGameManager extends GameManager {
     /**
      * Array holding all packs in the game.
      */
-    private Pack[] packsList;
+    private List<Pack> packList;
 
     /**
      * Reader for loading sound files.
@@ -182,8 +183,10 @@ public class BrickerGameManager extends GameManager {
         this.numRows = numRows;
         this.bricksCountDown = new danogl.util.Counter();
         this.packCounter = 0;
-        this.packsList = new Pack[numBricksPerRow*numRows*2];
-        this.movingHeartsList = new Heart[numBricksPerRow*numRows*2];
+        this.packList = new ArrayList<>();
+//        this.movingHeartsList = new Heart[numBricksPerRow*numRows*2];
+        this.movingHeartsList = new ArrayList<>();
+        this.heartsLifeList = new ArrayList<>();
         this.lifeNumeric = new LifeNumeric(NUM_OF_LIVES_START);
         this.extraPaddleOn = false;
         this.extraPaddle = null;
@@ -244,8 +247,9 @@ public class BrickerGameManager extends GameManager {
      */
     public void addHeart(GameObject object) {
         this.gameObjects().addGameObject(object);
-        this.movingHeartsList[movingHearsCounter] = (Heart) object;
-        this.movingHearsCounter++;
+//        this.movingHeartsList[movingHeartsCounter] = (Heart) object;
+        this.movingHeartsList.add((Heart) object);
+        this.movingHeartsCounter++;
     }
 
     /**
@@ -270,8 +274,9 @@ public class BrickerGameManager extends GameManager {
      */
     public void addPack(Pack pack) {
         // Add to the list and counter:
+        this.packList.add(pack);
         this.gameObjects().addGameObject(pack);
-        this.packsList[packCounter] = pack;
+//        this.packsList[packCounter] = pack;
         this.packCounter++;
     }
 
@@ -371,21 +376,18 @@ public class BrickerGameManager extends GameManager {
     }
 
     /**
-     * Checks the status of all packs in the game.
      * Removes packs that fall out of the game area.
      */
     private void checkPacksStatus() {
-        for (int i = 0; i < packsList.length; i++) {
-            Pack currentPack = packsList[i];
-            if (currentPack != null) {
-                float packHeight = currentPack.getCenter().y();
-                if (packHeight > windowDimensions.y()) {
-                    removeGeneralObject(currentPack);
-                    packsList[i] = null;
-                    packCounter--;
-                }
+        // Use iterator to safely remove while iterating
+        packList.removeIf(pack -> {
+            if (pack.getCenter().y() > windowDimensions.y()) {
+                removeGeneralObject(pack);
+                packCounter--; // Decrease the counter for debugging/logging
+                return true; // Remove from list
             }
-        }
+            return false;
+        });
     }
 
     /**
@@ -393,18 +395,17 @@ public class BrickerGameManager extends GameManager {
      * Removes hearts that fall out of the game area.
      */
     private void checkHeartsStatus() {
-        for (int i = 0; i < movingHeartsList.length; i++) {
-            Heart currentHeart = movingHeartsList[i];
-            if (currentHeart != null) {
-                float heartHeight = currentHeart.getCenter().y();
-                if (heartHeight > windowDimensions.y()) {
-                    removeGeneralObject(currentHeart);
-                    movingHeartsList[i] = null;
-                    movingHearsCounter--;
-                }
+        // Use iterator to safely remove while iterating
+        movingHeartsList.removeIf(heart -> {
+            if (heart.getCenter().y() > windowDimensions.y()) {
+                removeGeneralObject(heart); // Remove from game objects
+                movingHeartsCounter--;     // Decrement counter (optional)
+                return true;               // Indicate removal from list
             }
-        }
+            return false; // Retain in list
+        });
     }
+
 
     /**
      * Checks if the extra paddle has exceeded the maximum number of hits.
@@ -501,7 +502,6 @@ public class BrickerGameManager extends GameManager {
      * @param numHearts       The number of hearts (lives) to display.
      */
     private void createLives(ImageReader imageReader, Vector2 windowDimensions, int numHearts) {
-        this.heartsLifeList = new ArrayList<>(); // Initialize the list
         Renderable heartImage = imageReader.readImage("assets/heart.png", true);
 
         for (int i = 0; i < numHearts; i++) {
@@ -703,6 +703,23 @@ public class BrickerGameManager extends GameManager {
     }
 
     /**
+     * Validates that the probabilities array sums to 1.0.
+     *
+     * @param probabilities The array of probabilities to validate.
+     * @throws IllegalArgumentException if the probabilities do not sum to 1.0.
+     */
+    private void validateProbabilities(float[] probabilities) {
+        float sum = 0;
+        for (float prob : probabilities) {
+            sum += prob;
+        }
+        if (Math.abs(sum - 1.0f) > 1e-6) {
+            throw new IllegalArgumentException("Probabilities must sum to 1.");
+        }
+    }
+
+
+    /**
      * Creates a collision strategy for a brick based on weighted random selection.
      * This method assigns a collision strategy to a brick using random probability
      * weighted by predefined values.
@@ -712,56 +729,111 @@ public class BrickerGameManager extends GameManager {
     private CollisionStrategy createBrickCollisionStrategy() {
         Random random = new Random();
 
-        // Define weights for each strategy according to Instructions
-        float[] weights = BRICKS_PROBABILITIES;
-        float[] cumulativeProbabilities = new float[weights.length];
+        // Validate probabilities sum to 1
+        validateProbabilities(STRATEGY_PROBABILITIES);
 
         // Compute cumulative probabilities
-        cumulativeProbabilities[0] = weights[0];
-        for (int i = 1; i < weights.length; i++) {
-            cumulativeProbabilities[i] = cumulativeProbabilities[i - 1] + weights[i];
+        float[] cumulativeProbabilities = new float[STRATEGY_PROBABILITIES.length];
+        cumulativeProbabilities[0] = STRATEGY_PROBABILITIES[0];
+        for (int i = 1; i < STRATEGY_PROBABILITIES.length; i++) {
+            cumulativeProbabilities[i] = cumulativeProbabilities[i - 1] + STRATEGY_PROBABILITIES[i];
         }
 
         // Generate a random number between 0 and 1
         float randomValue = random.nextFloat();
 
-        // Add the relevant strategy:
+        // Determine the strategy type based on random value
+        int selectedStrategy = 0;
         for (int i = 0; i < cumulativeProbabilities.length; i++) {
             if (randomValue <= cumulativeProbabilities[i]) {
-                switch (i) {
-                    case 0:
-                        return new BasicCollisionStrategy(this);
-                    case 1:
-                        return new ExstraPackStrategy(this,
-                                BALL_SPEED,
-                                windowDimensions,
-                                BALL_RADIUS,
-                                imageReader,
-                                soundReader);
-                    case 2:
-                        return new ExstraPaddleStrategy(this,
-                                PADDLE_WIDTH,
-                                PADDLE_HEIGHT,
-                                windowDimensions,
-                                inputListener,
-                                imageReader);
-                    case 3:
-                        return new TurboStrategy(this,
-                                ball);
-                    case 4:
-                        return new ReturnLiveStrategy(this,
-                                windowDimensions,
-                                inputListener,
-                                imageReader,
-                                HEART_SIZE
-                                );
-                    case 5:
-                        return new MultipleBehaviorsStrategy();
-                }
+                selectedStrategy = i;
+                break;
             }
         }
-        return null;
+
+        // Create the appropriate strategy based on the selected enum value
+        return createStrategy(selectedStrategy);
     }
+
+    /**
+     * Creates a collision strategy for a brick based on the specified behavior type.
+     *
+     * @param behaviour An integer representing the behavior type (e.g., BASIC, EXTRA_PACK).
+     * @return A CollisionStrategy object corresponding to the specified behavior.
+     * @throws IllegalArgumentException if the behavior type is unknown.
+     */
+    private CollisionStrategy createStrategy(int behaviour) {
+        switch (behaviour) {
+            case BASIC:
+                return new BasicCollisionStrategy(this);
+            case EXTRA_PACK:
+                return new ExstraPackStrategy(this, imageReader, soundReader, BALL_SPEED, BALL_RADIUS);
+            case EXTRA_PADDLE:
+                return new ExstraPaddleStrategy(this, PADDLE_WIDTH, PADDLE_HEIGHT, windowDimensions, inputListener, imageReader);
+            case TURBO:
+                return new TurboStrategy(this, ball);
+            case RETURN_LIVE:
+                return new ReturnLiveStrategy(this, windowDimensions, inputListener, imageReader, HEART_SIZE);
+            case MULTIPLE_BEHAVIORS:
+                return new MultipleBehaviorsStrategy(this, getMultipleStrategies());
+
+            default:
+                throw new IllegalArgumentException("Unknown strategy behaviour: " + behaviour);
+        }
+    }
+
+    /**
+     * Generates an array of multiple collision strategies.
+     * Randomly selects two or three strategies based on predefined logic.
+     *
+     * @return An array of CollisionStrategy objects.
+     */
+    private CollisionStrategy[] getMultipleStrategies() {
+        boolean threeBehaviors = false;
+        int behave1 = getRandomNum(EXTRA_PACK, MULTIPLE_BEHAVIORS);
+        int behave2;
+        int behave3 = -1;
+        do {
+            behave2 = getRandomNum(EXTRA_PACK, MULTIPLE_BEHAVIORS);
+        } while (behave1 == behave2);
+        if (behave1 == MULTIPLE_BEHAVIORS || behave2 == MULTIPLE_BEHAVIORS) {
+            threeBehaviors = true;
+            behave1 = (behave1 == MULTIPLE_BEHAVIORS) ? behave2 : behave1;
+
+            behave2 = getRandomNum(EXTRA_PACK, RETURN_LIVE);
+            do {
+                behave3 = getRandomNum(EXTRA_PACK, RETURN_LIVE);
+            } while (behave2 == behave3);
+        }
+        // Create the strategies array
+        if (threeBehaviors) {
+            System.out.println("3 behaviours: " + behave1 + " " + behave2 + " " + behave3);
+            return new CollisionStrategy[] {
+                    createStrategy(behave1),
+                    createStrategy(behave2),
+                    createStrategy(behave3)
+            };
+        } else {
+            System.out.println("2 behaviours: " + behave1 + " " + behave2 );
+            return new CollisionStrategy[] {
+                    createStrategy(behave1),
+                    createStrategy(behave2)
+            };
+        }
+    }
+
+    /**
+     * Generates a random integer within a specified range.
+     *
+     * @param min The minimum value (inclusive).
+     * @param max The maximum value (inclusive).
+     * @return A random integer between min and max.
+     */
+    private int getRandomNum(int min, int max){
+        return ThreadLocalRandom.current().nextInt(min, max + 1); // Inclusive of `max`
+    }
+
+
 
     public static void main(String[] args) {
         int numBricks = NUM_BRICKS_PER_ROW;

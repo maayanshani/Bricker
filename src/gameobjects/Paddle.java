@@ -8,6 +8,11 @@ import danogl.util.Vector2;
 
 import java.awt.event.KeyEvent;
 
+/**
+ * Represents a paddle in the game.
+ * The paddle is controlled by user input and can move left or right within the game window.
+ * It interacts with other game objects, such as balls and packs, and keeps track of collisions.
+ */
 public class Paddle extends GameObject {
     private static final float MOVEMENT_SPEED = 300;
 

@@ -6,6 +6,11 @@ import danogl.gui.Sound;
 import danogl.gui.rendering.Renderable;
 import danogl.util.Vector2;
 
+/**
+ * Represents a "pack" object in the game, which is a specialized form of a `Ball`.
+ * Packs may represent power-ups, bonuses, or other in-game items that interact
+ * with the player or other objects upon collision.
+ */
 public class Pack extends Ball{
     /**
      * Non-default Constructor
@@ -24,5 +29,4 @@ public class Pack extends Ball{
         super(topLeftCorner, dimensions, renderable, collisionSound);
         this.setDimensions(dimensions.mult(0.75f));
     }
-
 }

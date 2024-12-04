@@ -6,6 +6,11 @@ import danogl.gui.Sound;
 import danogl.gui.rendering.Renderable;
 import danogl.util.Vector2;
 
+/**
+ * Represents a ball in the game.
+ * The ball interacts with other game objects, and its behavior is defined upon collisions.
+ * It keeps track of the number of collisions and plays a sound when a collision occurs.
+ */
 public class Ball extends GameObject {
     /**
      * The sound to be played when a collision occurs.

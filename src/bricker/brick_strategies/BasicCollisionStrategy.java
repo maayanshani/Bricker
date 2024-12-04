@@ -1,10 +1,14 @@
 package bricker.brick_strategies;
 
 import danogl.GameObject;
-import danogl.collisions.GameObjectCollection;
 import gameobjects.Brick;
 
+/**
+ * A basic collision strategy for handling collisions with bricks.
+ * This strategy removes the brick from the game upon collision.
+ */
 public class BasicCollisionStrategy implements CollisionStrategy {
+
     /**
      * The game manager that manages the game state.
      */

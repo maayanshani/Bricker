@@ -5,6 +5,10 @@ import danogl.GameObject;
 import gameobjects.Ball;
 import gameobjects.Brick;
 
+/**
+ * A collision strategy that removes a brick and enables turbo mode for the ball.
+ * Turbo mode may be triggered based on specific game events, such as collision conditions.
+ */
 public class TurboStrategy implements CollisionStrategy{
     /**
      * The game manager responsible for managing the game logic and controlling game state.

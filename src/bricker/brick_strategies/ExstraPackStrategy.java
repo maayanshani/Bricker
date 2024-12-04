@@ -11,16 +11,21 @@ import gameobjects.Pack;
 
 import java.util.Random;
 
+/**
+ * A collision strategy that removes a brick from the game upon collision and creates
+ * a specified number of "Pack" objects (e.g., power-ups or bonuses) at the brick's position.
+ */
 public class ExstraPackStrategy implements CollisionStrategy {
+
+    /**
+     * The number of packs to create for each brick collision.
+     */
+    private static final int NUM_PACKS_PER_BRICK = 2;
+
     /**
      * The game manager that manages the game logic, including removing bricks and adding packs.
      */
     private bricker.main.BrickerGameManager gameManager;
-
-    /**
-     * The pack object that is created upon collision with a brick.
-     */
-    private Pack pack;
 
     /**
      * The speed at which the pack will move.
@@ -46,21 +51,22 @@ public class ExstraPackStrategy implements CollisionStrategy {
      * Constructs an instance of ExstraPackStrategy to manage the creation of packs after a collision.
      *
      * @param gameManager   The game manager that handles game logic.
-     * @param ballSpeed     The speed at which the pack will move.
-     * @param windowDimensions The dimensions of the game window.
-     * @param ballRadius    The radius of the ball, used to scale the pack radius.
      * @param imageReader   The image reader used to load pack images.
      * @param soundReader   The sound reader used to load sounds for the pack.
+     * @param ballSpeed     The speed at which the pack will move.
+     * @param ballRadius    The radius of the ball, used to scale the pack radius.
      */
     public ExstraPackStrategy(bricker.main.BrickerGameManager gameManager,
-                              float ballSpeed, Vector2 windowDimensions,
-                              float ballRadius, ImageReader imageReader, SoundReader soundReader) {
+                              ImageReader imageReader,
+                              SoundReader soundReader,
+                              float ballSpeed,
+                              float ballRadius) {
 
         this.gameManager = gameManager;
-        this.ballSpeed = ballSpeed;
-        this.ballRadius = ballRadius;
         this.imageReader = imageReader;
         this.soundReader = soundReader;
+        this.ballSpeed = ballSpeed;
+        this.ballRadius = ballRadius;
     }
 
     /**
@@ -72,20 +78,20 @@ public class ExstraPackStrategy implements CollisionStrategy {
      */
     @Override
     public void onCollision(GameObject object1, GameObject object2) {
-        // create in the place of the brick two Packs:
         // remove brick:
         gameManager.removeBrick((Brick)object1);
-        // create 2 Packs:
-        for (int i = 0; i < 2; i++) {
+
+        // create in the place of the brick two Packs:
+        for (int i = 0; i < NUM_PACKS_PER_BRICK; i++) {
             Renderable packImage = imageReader.readImage("assets/mockBall.png", true);
             Sound collisionSound = soundReader.readSound("assets/blop.wav");
-            pack = new Pack(Vector2.ZERO,
+            Pack pack = new Pack(Vector2.ZERO,
                     new Vector2(ballRadius, ballRadius),
                     packImage,
                     collisionSound);
             pack.setTag("Pack");
             Vector2 currentPosition = object1.getCenter();
-            resetPack(currentPosition);
+            resetPack(pack, currentPosition);
         }
     }
 
@@ -94,7 +100,7 @@ public class ExstraPackStrategy implements CollisionStrategy {
      *
      * @param currentPosition The position where the pack will be placed.
      */
-    private void resetPack(Vector2 currentPosition) {
+    private void resetPack(Pack pack, Vector2 currentPosition) {
         Random rand = new Random();
 
         // Setting velocity:

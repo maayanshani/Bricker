@@ -9,7 +9,13 @@ import danogl.util.Vector2;
 import gameobjects.Brick;
 import gameobjects.Paddle;
 
+/**
+ * A collision strategy that removes a brick from the game upon collision and creates
+ * an additional paddle at the center of the game window.
+ * This paddle is controlled by the user and is flagged as an extra paddle.
+ */
 public class ExstraPaddleStrategy implements CollisionStrategy {
+
     /**
      * The game manager that manages the game logic, including removing bricks and adding paddles.
      */

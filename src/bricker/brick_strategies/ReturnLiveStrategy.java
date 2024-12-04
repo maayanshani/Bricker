@@ -1,5 +1,6 @@
 package bricker.brick_strategies;
 
+import bricker.heartStrategy.HeartColideStrategy;
 import bricker.main.BrickerGameManager;
 import danogl.GameObject;
 import danogl.gui.ImageReader;
@@ -9,35 +10,79 @@ import danogl.util.Vector2;
 import gameobjects.Brick;
 import gameobjects.Heart;
 
-public class ReturnLiveStrategy implements CollisionStrategy{
+/**
+ * A collision strategy that removes a brick and creates a heart object in the game.
+ * The heart represents an extra life and moves downwards after being created.
+ */
+public class ReturnLiveStrategy implements CollisionStrategy {
+
+    /**
+     * The velocity of the heart object when it is created.
+     */
     private static final int HEART_VEL = 100;
 
+    /**
+     * The game manager that manages the game logic and state.
+     */
     private final BrickerGameManager gameManager;
+
+    /**
+     * The dimensions of the game window, used for positioning the heart.
+     */
     private final Vector2 windowDimensions;
+
+    /**
+     * The input listener for detecting user interactions.
+     */
     private final UserInputListener inputListener;
+
+    /**
+     * The image reader used to load images for the heart object.
+     */
     private final ImageReader imageReader;
+
+    /**
+     * The size of the heart object.
+     */
     private final int heartSize;
+
+    /**
+     * The heart object created during a collision.
+     */
     private Heart heart;
 
-    public ReturnLiveStrategy (bricker.main.BrickerGameManager gameManager,
-                               Vector2 windowDimensions,
-                               UserInputListener inputListener,
-                               ImageReader imageReader,
-                               int heartSize
-                               ){
+    /**
+     * Constructs a new ReturnLiveStrategy.
+     *
+     * @param gameManager      The game manager that handles game logic and state.
+     * @param windowDimensions The dimensions of the game window.
+     * @param inputListener    The input listener for detecting user interactions.
+     * @param imageReader      The image reader used to load heart images.
+     * @param heartSize        The size of the heart object.
+     */
+    public ReturnLiveStrategy(bricker.main.BrickerGameManager gameManager,
+                              Vector2 windowDimensions,
+                              UserInputListener inputListener,
+                              ImageReader imageReader,
+                              int heartSize) {
         this.gameManager = gameManager;
         this.windowDimensions = windowDimensions;
         this.inputListener = inputListener;
         this.imageReader = imageReader;
         this.heartSize = heartSize;
-
     }
-    //
 
+    /**
+     * Handles the collision between two GameObjects.
+     * Removes the brick from the game and creates a heart object that moves downwards.
+     *
+     * @param object1 The first GameObject involved in the collision, expected to be a brick.
+     * @param object2 The second GameObject involved in the collision.
+     */
     @Override
     public void onCollision(GameObject object1, GameObject object2) {
-        // remove the brick and create a heart in the middle that is going down
-        gameManager.removeBrick((Brick)object1);
+        // Remove the brick and create a heart in the middle that moves downwards
+        gameManager.removeBrick((Brick) object1);
         Renderable heartImage = imageReader.readImage("assets/heart.png", false);
         Vector2 size = new Vector2(heartSize, heartSize);
         CollisionStrategy HeartColideStrategy = new HeartColideStrategy(gameManager);
@@ -47,14 +92,19 @@ public class ReturnLiveStrategy implements CollisionStrategy{
         moveHeart(currentPosition);
     }
 
+    /**
+     * Moves the heart object by setting its velocity and position.
+     * The heart moves downwards after being created.
+     *
+     * @param currentPosition The position where the heart will be placed.
+     */
     private void moveHeart(Vector2 currentPosition) {
-
-        float velX = (float)0;
-        float velY = (float) HEART_VEL;
+        float velX = 0;
+        float velY = HEART_VEL;
 
         heart.setVelocity(new Vector2(velX, velY));
 
-        // Setting coordinates:
+        // Set coordinates
         heart.setCenter(windowDimensions.mult(0.5f));
         heart.setCenter(currentPosition);
 

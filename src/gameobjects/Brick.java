@@ -6,6 +6,10 @@ import danogl.collisions.Collision;
 import danogl.gui.rendering.Renderable;
 import danogl.util.Vector2;
 
+/**
+ * Represents a brick in the game.
+ * A brick interacts with other game objects and uses a collision strategy to handle its collision behavior.
+ */
 public class Brick extends GameObject {
     /**
      * The strategy to handle collision behavior for this brick.
