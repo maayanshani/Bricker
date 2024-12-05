@@ -1,6 +1,6 @@
 package bricker.brick_strategies;
 
-import bricker.heartStrategy.HeartColideStrategy;
+import bricker.heartStrategy.HeartCollideStrategy;
 import bricker.main.BrickerGameManager;
 import danogl.GameObject;
 import danogl.gui.ImageReader;
@@ -32,11 +32,6 @@ public class ReturnLiveStrategy implements CollisionStrategy {
     private final Vector2 windowDimensions;
 
     /**
-     * The input listener for detecting user interactions.
-     */
-    private final UserInputListener inputListener;
-
-    /**
      * The image reader used to load images for the heart object.
      */
     private final ImageReader imageReader;
@@ -56,18 +51,15 @@ public class ReturnLiveStrategy implements CollisionStrategy {
      *
      * @param gameManager      The game manager that handles game logic and state.
      * @param windowDimensions The dimensions of the game window.
-     * @param inputListener    The input listener for detecting user interactions.
      * @param imageReader      The image reader used to load heart images.
      * @param heartSize        The size of the heart object.
      */
     public ReturnLiveStrategy(bricker.main.BrickerGameManager gameManager,
                               Vector2 windowDimensions,
-                              UserInputListener inputListener,
                               ImageReader imageReader,
                               int heartSize) {
         this.gameManager = gameManager;
         this.windowDimensions = windowDimensions;
-        this.inputListener = inputListener;
         this.imageReader = imageReader;
         this.heartSize = heartSize;
     }
@@ -85,7 +77,7 @@ public class ReturnLiveStrategy implements CollisionStrategy {
         gameManager.removeBrick((Brick) object1);
         Renderable heartImage = imageReader.readImage("assets/heart.png", false);
         Vector2 size = new Vector2(heartSize, heartSize);
-        CollisionStrategy HeartColideStrategy = new HeartColideStrategy(gameManager);
+        CollisionStrategy HeartColideStrategy = new HeartCollideStrategy(gameManager);
         this.heart = new Heart(Vector2.ZERO, size, heartImage, HeartColideStrategy);
         this.heart.setTag("Heart");
         Vector2 currentPosition = object1.getCenter();

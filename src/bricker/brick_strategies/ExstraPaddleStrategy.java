@@ -57,10 +57,11 @@ public class ExstraPaddleStrategy implements CollisionStrategy {
      * @param imageReader     The image reader used to load paddle images.
      */
     public ExstraPaddleStrategy(bricker.main.BrickerGameManager gameManager,
-                                int paddleWidth, int paddleHeight,
                                 Vector2 windowDimensions,
                                 UserInputListener inputListener,
-                                ImageReader imageReader) {
+                                ImageReader imageReader,
+                                int paddleWidth,
+                                int paddleHeight) {
         this.gameManager = gameManager;
         this.paddleWidth = paddleWidth;
         this.paddleHeight = paddleHeight;

@@ -18,13 +18,14 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
+
 /**
- * Manages the Bricker game, handling initialization, game updates, object creation, and collision logic.
- * <p>
  * TODO:
  * 3. return to the right probabilities in createBrickCollisionStrategy method
- * 4. maybe there is no use for Pack class?
- * 5. i moved the probabilities to be static final
+ */
+
+/**
+ * Manages the Bricker game, handling initialization, game updates, object creation, and collision logic.
  */
 public class BrickerGameManager extends GameManager {
 
@@ -51,12 +52,18 @@ public class BrickerGameManager extends GameManager {
     private static final int TURBO = 3;
     private static final int RETURN_LIVE = 4;
     private static final int MULTIPLE_BEHAVIORS = 5;
+    private static final float TURBO_MULTIPLIER = 1.4f;
+    private static final int TURBO_COLLISION_THRESHOLD = 6;
+    private static final int NEGATIVE_DIRECTION = -1;
+    private static final float WALL_POSITION_ADJUSTMENT = 0.5f;
+    private static final float PROBABILITIES_SUM = 1.0f;
+    private static final float PROBABILITIES_TOLERANCE = 1e-6f;
 
-    // TODO: delete wrong probabilities, its only for checking the strategies:
-    private static final float[] STRATEGY_PROBABILITIES = {0f, 0f, 0f, 0f, 0f, 1f};
+    // probabilities for checking things
+//     private static final float[] STRATEGY_PROBABILITIES = {0f, 0f, 0f, 0f, 0f, 1f};
 
     // right probabilities:
-//     private static final float[] STRATEGY_PROBABILITIES = {0.5f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f};
+     private static final float[] STRATEGY_PROBABILITIES = {0.5f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f};
 
 
     // Bricks fields:
@@ -101,10 +108,6 @@ public class BrickerGameManager extends GameManager {
      */
     private GameObject lifeTextObject;
 
-    /**
-     * Counter for tracking the moving hearts in the game.
-     */
-    private int movingHeartsCounter;
 
     /**
      * Array of moving hearts.
@@ -139,11 +142,6 @@ public class BrickerGameManager extends GameManager {
     private UserInputListener inputListener;
 
     // Pack fields:
-    /**
-     * Counter for tracking the number of packs in the game.
-     */
-    private int packCounter;
-
     /**
      * Array holding all packs in the game.
      */
@@ -182,7 +180,6 @@ public class BrickerGameManager extends GameManager {
         this.numBricksPerRow = numBricksPerRow;
         this.numRows = numRows;
         this.bricksCountDown = new danogl.util.Counter();
-        this.packCounter = 0;
         this.packList = new ArrayList<>();
 //        this.movingHeartsList = new Heart[numBricksPerRow*numRows*2];
         this.movingHeartsList = new ArrayList<>();
@@ -247,9 +244,7 @@ public class BrickerGameManager extends GameManager {
      */
     public void addHeart(GameObject object) {
         this.gameObjects().addGameObject(object);
-//        this.movingHeartsList[movingHeartsCounter] = (Heart) object;
         this.movingHeartsList.add((Heart) object);
-        this.movingHeartsCounter++;
     }
 
     /**
@@ -276,8 +271,6 @@ public class BrickerGameManager extends GameManager {
         // Add to the list and counter:
         this.packList.add(pack);
         this.gameObjects().addGameObject(pack);
-//        this.packsList[packCounter] = pack;
-        this.packCounter++;
     }
 
     /**
@@ -359,16 +352,17 @@ public class BrickerGameManager extends GameManager {
         this.numCollisions = numCollisions;
 
         // Set ball velocity and change its appearance:
-        ball.setVelocity(ball.getVelocity().mult(1.4f));
+        ball.setVelocity(ball.getVelocity().mult(TURBO_MULTIPLIER));
         Renderable redBallImage = imageReader.readImage("assets/redball.png", true);
         ball.renderer().setRenderable(redBallImage);
     }
 
     /**
-     * Checks if turbo mode is active and deactivates it once the required number of collisions have been reached.
+     * Checks if turbo mode is active and deactivates it once the
+     * required number of collisions have been reached.
      */
     private void checkTurboStatus() {
-        if (isTurboOn && ball.getCollisionCounter() == 6 + numCollisions) {
+        if (isTurboOn && ball.getCollisionCounter() == numCollisions + TURBO_COLLISION_THRESHOLD) {
             // Change the ball back to normal speed and appearance
             resetBall();
             isTurboOn = false;
@@ -383,7 +377,6 @@ public class BrickerGameManager extends GameManager {
         packList.removeIf(pack -> {
             if (pack.getCenter().y() > windowDimensions.y()) {
                 removeGeneralObject(pack);
-                packCounter--; // Decrease the counter for debugging/logging
                 return true; // Remove from list
             }
             return false;
@@ -399,7 +392,6 @@ public class BrickerGameManager extends GameManager {
         movingHeartsList.removeIf(heart -> {
             if (heart.getCenter().y() > windowDimensions.y()) {
                 removeGeneralObject(heart); // Remove from game objects
-                movingHeartsCounter--;     // Decrement counter (optional)
                 return true;               // Indicate removal from list
             }
             return false; // Retain in list
@@ -471,13 +463,13 @@ public class BrickerGameManager extends GameManager {
 
         for (int i = 0; i < wallsWidth.length; i++) {
             GameObject sideWall = new GameObject(Vector2.ZERO, new Vector2(WALL_WIDTH, wallHeight), null);
-            sideWall.setCenter(new Vector2(wallsWidth[i], windowDimensions.y() / 2));
+            sideWall.setCenter(new Vector2(wallsWidth[i], windowDimensions.y() * WALL_POSITION_ADJUSTMENT));
             this.gameObjects().addGameObject(sideWall);
         }
 
         int upperWallWidth = (int) windowDimensions.x();
         GameObject upperWall = new GameObject(Vector2.ZERO, new Vector2(upperWallWidth, WALL_WIDTH), null);
-        upperWall.setCenter(new Vector2(windowDimensions.x() / 2, WALL_WIDTH / 2));
+        upperWall.setCenter(new Vector2(windowDimensions.x() * WALL_POSITION_ADJUSTMENT, WALL_WIDTH * WALL_POSITION_ADJUSTMENT));
         this.gameObjects().addGameObject(upperWall);
     }
 
@@ -506,7 +498,7 @@ public class BrickerGameManager extends GameManager {
 
         for (int i = 0; i < numHearts; i++) {
             Vector2 heartSize = new Vector2(HEART_SIZE, HEART_SIZE);
-            float corX = windowDimensions.x() - (i + 1) * (heartSize.x() + MARGIN); // Position hearts horizontally
+            float corX = windowDimensions.x() - (i + 1) * (heartSize.x() + MARGIN);
             Vector2 heartCoors = new Vector2(corX, HEART_COR_Y);
 
             Heart heart = new Heart(heartCoors, heartSize, heartImage);
@@ -561,7 +553,6 @@ public class BrickerGameManager extends GameManager {
      *
      * @param add True to add a life, false to remove one.
      */
-    // todo: i changed it to public. need to explain
     public void updateLives(boolean add) {
         // Update the numeric life counter
         if (add) {
@@ -605,7 +596,7 @@ public class BrickerGameManager extends GameManager {
     private void resetBall() {
         // if Turbo is On:
         if (isTurboOn) {
-            ball.setVelocity(ball.getVelocity().mult(1 / 1.4f));
+            ball.setVelocity(ball.getVelocity().mult(1 / TURBO_MULTIPLIER));
             Renderable redBallImage = imageReader.readImage("assets/ball.png", true);
             ball.renderer().setRenderable(redBallImage);
         }
@@ -615,10 +606,10 @@ public class BrickerGameManager extends GameManager {
             float ballVelY = BALL_SPEED;
             Random rand = new Random();
             if (rand.nextBoolean()) {
-                ballVelX *= -1;
+                ballVelX *= NEGATIVE_DIRECTION;
             }
             if (rand.nextBoolean()) {
-                ballVelY *= -1;
+                ballVelY *= NEGATIVE_DIRECTION;
             }
             ball.setVelocity(new Vector2(ballVelX, ballVelY));
 
@@ -638,9 +629,12 @@ public class BrickerGameManager extends GameManager {
      * @param inputListener   The input listener for player control.
      * @param windowDimensions The dimensions of the game window.
      */
-    private void createPaddle(ImageReader imageReader, UserInputListener inputListener, Vector2 windowDimensions) {
+    private void createPaddle(ImageReader imageReader,
+                              UserInputListener inputListener,
+                              Vector2 windowDimensions) {
         Renderable paddleImage = imageReader.readImage("assets/paddle.png", true);
-        Paddle paddle = new Paddle(Vector2.ZERO, new Vector2(PADDLE_WIDTH, PADDLE_HEIGHT), paddleImage, inputListener, windowDimensions, false);
+        Paddle paddle = new Paddle(Vector2.ZERO, new Vector2(PADDLE_WIDTH, PADDLE_HEIGHT),
+                paddleImage, inputListener, windowDimensions, false);
         paddle.setTag("Paddle");
         paddle.setCenter(new Vector2(windowDimensions.x() / 2, windowDimensions.y() - WALL_WIDTH));
         this.gameObjects().addGameObject(paddle);
@@ -713,7 +707,7 @@ public class BrickerGameManager extends GameManager {
         for (float prob : probabilities) {
             sum += prob;
         }
-        if (Math.abs(sum - 1.0f) > 1e-6) {
+        if (Math.abs(sum - PROBABILITIES_SUM) > PROBABILITIES_TOLERANCE) {
             throw new IllegalArgumentException("Probabilities must sum to 1.");
         }
     }
@@ -769,11 +763,12 @@ public class BrickerGameManager extends GameManager {
             case EXTRA_PACK:
                 return new ExstraPackStrategy(this, imageReader, soundReader, BALL_SPEED, BALL_RADIUS);
             case EXTRA_PADDLE:
-                return new ExstraPaddleStrategy(this, PADDLE_WIDTH, PADDLE_HEIGHT, windowDimensions, inputListener, imageReader);
+                return new ExstraPaddleStrategy(this, windowDimensions, inputListener,
+                        imageReader, PADDLE_WIDTH, PADDLE_HEIGHT);
             case TURBO:
                 return new TurboStrategy(this, ball);
             case RETURN_LIVE:
-                return new ReturnLiveStrategy(this, windowDimensions, inputListener, imageReader, HEART_SIZE);
+                return new ReturnLiveStrategy(this, windowDimensions, imageReader, HEART_SIZE);
             case MULTIPLE_BEHAVIORS:
                 return new MultipleBehaviorsStrategy(this, getMultipleStrategies());
 
@@ -807,14 +802,12 @@ public class BrickerGameManager extends GameManager {
         }
         // Create the strategies array
         if (threeBehaviors) {
-            System.out.println("3 behaviours: " + behave1 + " " + behave2 + " " + behave3);
             return new CollisionStrategy[] {
                     createStrategy(behave1),
                     createStrategy(behave2),
                     createStrategy(behave3)
             };
         } else {
-            System.out.println("2 behaviours: " + behave1 + " " + behave2 );
             return new CollisionStrategy[] {
                     createStrategy(behave1),
                     createStrategy(behave2)
@@ -832,7 +825,6 @@ public class BrickerGameManager extends GameManager {
     private int getRandomNum(int min, int max){
         return ThreadLocalRandom.current().nextInt(min, max + 1); // Inclusive of `max`
     }
-
 
 
     public static void main(String[] args) {

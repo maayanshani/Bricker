@@ -8,7 +8,7 @@ import danogl.GameObject;
  * When a collision occurs, the heart is removed from the game, and the player's
  * life count is updated.
  */
-public class HeartColideStrategy implements CollisionStrategy {
+public class HeartCollideStrategy implements CollisionStrategy {
 
     /**
      * The game manager responsible for managing the game logic and state.
@@ -20,7 +20,7 @@ public class HeartColideStrategy implements CollisionStrategy {
      *
      * @param gameManager The game manager responsible for managing the game logic.
      */
-    public HeartColideStrategy(bricker.main.BrickerGameManager gameManager) {
+    public HeartCollideStrategy(bricker.main.BrickerGameManager gameManager) {
         this.gameManager = gameManager;
     }
 

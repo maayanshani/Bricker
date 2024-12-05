@@ -1,0 +1,46 @@
+maayanshani,rotem.garti
+319111886,
+
+## Answers to Questions
+
+1. We passed the `BrickerGameManager` instance to the constructor of `BasicCollisionStrategy` and used its
+public methods to manage bricks and other objects.
+Advantages: Centralized object management ensures consistency and simplifies handling of additional behaviors
+or object types in future extensions.
+Disadvantages: This approach increases coupling between `BasicCollisionStrategy` and `BrickerGameManager`.
+
+2. We created two different classes, one for the numeric counter and another for the hearts.
+In the `Heart` class, we implemented the `shouldCollideWith` function,
+and the display of the number of lives is managed in `Layer.UI`,
+which does not interact with the ball, packs, or bricks.
+
+3. Each behavior is implemented in a separate strategy class that implements `CollisionStrategy`.
+For the extra pack, we created a new `Pack` class that extends `Ball` and used it.
+For the extra paddle, we added an additional parameter, `isExtraPaddle`, to the constructor,
+allowing us to distinguish between the original paddle and the extra one.
+For returning lives, we used the `Heart` class and implemented a new strategy called `HeartCollideStrategy`.
+For the turbo feature, we created a function in the `GameManager` that changes the ball's velocity,
+used the collision counter to track its progress, and reset the speed to normal in the update function
+once it was done.
+
+4. The system randomly selects 2-3 strategies, ensuring no more than 3 are active at a time.
+It accepts `CollisionStrategy[]` as arguments, and upon collision,
+it uses all strategies' `onCollide` methods.
+
+5. New classes such as `Heart`, `Pack`,  were added to gameObjects package to enable a modular design.
+HeartCollideStrategy were added to a new package heartStrategy to allow the returnLiveStrategy and the
+collision between heart and the paddle.
+we changed updateLives method in brickerGameMangaer to public for allowing adding life to the player
+when the heart and paddle collide.
+
+Support additional features like lives and special brick behaviors. Public methods were added to the
+`GameManager` to support these changes.
+
+## Building
+- Start by adding DanoGameLab.jar and src to the modules inside Project Structure. 
+- Go to File > Project Structure > Modules.
+- Click + > JARs or Directories.
+- inside DanoGameLab select BOTH src and DanoGameLab.jar.
+- Click OK and then another OK to save. 
+
+
