@@ -2,7 +2,7 @@ package bricker.brick_strategies;
 
 import bricker.main.BrickerGameManager;
 import danogl.GameObject;
-import gameobjects.Brick;
+import bricker.gameobjects.Brick;
 
 /**
  * A collision strategy that applies multiple behaviors in sequence.

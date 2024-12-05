@@ -7,8 +7,8 @@ import danogl.gui.ImageReader;
 import danogl.gui.UserInputListener;
 import danogl.gui.rendering.Renderable;
 import danogl.util.Vector2;
-import gameobjects.Brick;
-import gameobjects.Heart;
+import bricker.gameobjects.Brick;
+import bricker.gameobjects.Heart;
 
 /**
  * A collision strategy that removes a brick and creates a heart object in the game.

@@ -6,8 +6,8 @@ import danogl.gui.ImageReader;
 import danogl.gui.UserInputListener;
 import danogl.gui.rendering.Renderable;
 import danogl.util.Vector2;
-import gameobjects.Brick;
-import gameobjects.Paddle;
+import bricker.gameobjects.Brick;
+import bricker.gameobjects.Paddle;
 
 /**
  * A collision strategy that removes a brick from the game upon collision and creates

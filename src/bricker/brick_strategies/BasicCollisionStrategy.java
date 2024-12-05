@@ -1,7 +1,7 @@
 package bricker.brick_strategies;
 
 import danogl.GameObject;
-import gameobjects.Brick;
+import bricker.gameobjects.Brick;
 
 /**
  * A basic collision strategy for handling collisions with bricks.

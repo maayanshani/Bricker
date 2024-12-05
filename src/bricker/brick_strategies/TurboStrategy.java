@@ -2,8 +2,8 @@ package bricker.brick_strategies;
 
 import bricker.main.BrickerGameManager;
 import danogl.GameObject;
-import gameobjects.Ball;
-import gameobjects.Brick;
+import bricker.gameobjects.Ball;
+import bricker.gameobjects.Brick;
 
 /**
  * A collision strategy that removes a brick and enables turbo mode for the ball.

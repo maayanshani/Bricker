@@ -9,7 +9,7 @@ import danogl.gui.*;
 import danogl.gui.rendering.Renderable;
 import danogl.gui.rendering.TextRenderable;
 import danogl.util.Vector2;
-import gameobjects.*;
+import bricker.gameobjects.*;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;

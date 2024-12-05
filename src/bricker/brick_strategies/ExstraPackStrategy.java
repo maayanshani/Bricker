@@ -6,8 +6,8 @@ import danogl.gui.Sound;
 import danogl.gui.SoundReader;
 import danogl.gui.rendering.Renderable;
 import danogl.util.Vector2;
-import gameobjects.Brick;
-import gameobjects.Pack;
+import bricker.gameobjects.Brick;
+import bricker.gameobjects.Pack;
 
 import java.util.Random;
 
