@@ -18,12 +18,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
-
-/**
- * TODO:
- * 3. return to the right probabilities in createBrickCollisionStrategy method
- */
-
 /**
  * Manages the Bricker game, handling initialization, game updates, object creation, and collision logic.
  */
@@ -58,9 +52,14 @@ public class BrickerGameManager extends GameManager {
     private static final float WALL_POSITION_ADJUSTMENT = 0.5f;
     private static final float PROBABILITIES_SUM = 1.0f;
     private static final float PROBABILITIES_TOLERANCE = 1e-6f;
+    private static final String TURBO_BALL_IMAGE_PATH = "assets/redball.png";
+    private static final String HEART_IMAGE_PATH = "assets/heart.png";
+    private static final String BALL_COLLISION_SOUND_PATH = "assets/blop.wav";
+    private static final String BALL_IMAGE_PATH = "assets/ball.png";
+    private static final String PADDLE_IMAGE_PATH = "assets/paddle.png";
+    private static final String BRICK_IMAGE_PATH = "assets/brick.png";
+    private static final String BACKGROUND_IMAGE_PATH = "assets/DARK_BG2_small.jpeg";
 
-    // probabilities for checking things
-//     private static final float[] STRATEGY_PROBABILITIES = {0f, 0f, 0f, 0f, 0f, 1f};
 
     // right probabilities:
      private static final float[] STRATEGY_PROBABILITIES = {0.5f, 0.1f, 0.1f, 0.1f, 0.1f, 0.1f};
@@ -112,7 +111,6 @@ public class BrickerGameManager extends GameManager {
     /**
      * Array of moving hearts.
      */
-//    private Heart[] movingHeartsList;
     private List<Heart> movingHeartsList;
 
     // Initialization fields:
@@ -353,9 +351,10 @@ public class BrickerGameManager extends GameManager {
 
         // Set ball velocity and change its appearance:
         ball.setVelocity(ball.getVelocity().mult(TURBO_MULTIPLIER));
-        Renderable redBallImage = imageReader.readImage("assets/redball.png", true);
+        Renderable redBallImage = imageReader.readImage(TURBO_BALL_IMAGE_PATH, true);
         ball.renderer().setRenderable(redBallImage);
     }
+
 
     /**
      * Checks if turbo mode is active and deactivates it once the
@@ -480,7 +479,7 @@ public class BrickerGameManager extends GameManager {
      * @param windowDimensions The dimensions of the game window.
      */
     private void addBackground(ImageReader imageReader, Vector2 windowDimensions) {
-        Renderable backgroundImage = imageReader.readImage("assets/DARK_BG2_small.jpeg", false);
+        Renderable backgroundImage = imageReader.readImage(BACKGROUND_IMAGE_PATH, false);
         GameObject background = new GameObject(Vector2.ZERO, windowDimensions, backgroundImage);
         background.setCoordinateSpace(CoordinateSpace.CAMERA_COORDINATES);
         this.gameObjects().addGameObject(background, Layer.BACKGROUND);
@@ -494,7 +493,8 @@ public class BrickerGameManager extends GameManager {
      * @param numHearts       The number of hearts (lives) to display.
      */
     private void createLives(ImageReader imageReader, Vector2 windowDimensions, int numHearts) {
-        Renderable heartImage = imageReader.readImage("assets/heart.png", true);
+        Renderable heartImage = imageReader.readImage(HEART_IMAGE_PATH, true);
+
 
         for (int i = 0; i < numHearts; i++) {
             Vector2 heartSize = new Vector2(HEART_SIZE, HEART_SIZE);
@@ -581,8 +581,9 @@ public class BrickerGameManager extends GameManager {
      * @param soundReader    The reader used to load the ball's collision sound.
      */
     private void createBall(ImageReader imageReader, Vector2 windowDimensions, SoundReader soundReader) {
-        Renderable ballImage = imageReader.readImage("assets/ball.png", true);
-        Sound collisionSound = soundReader.readSound("assets/blop.wav");
+        Renderable ballImage = imageReader.readImage(BALL_IMAGE_PATH, true);
+        Sound collisionSound = soundReader.readSound(BALL_COLLISION_SOUND_PATH);
+
         ball = new Ball(Vector2.ZERO, new Vector2(BALL_RADIUS, BALL_RADIUS), ballImage, collisionSound);
         ball.setTag("Ball");
 
@@ -597,7 +598,7 @@ public class BrickerGameManager extends GameManager {
         // if Turbo is On:
         if (isTurboOn) {
             ball.setVelocity(ball.getVelocity().mult(1 / TURBO_MULTIPLIER));
-            Renderable redBallImage = imageReader.readImage("assets/ball.png", true);
+            Renderable redBallImage = imageReader.readImage(BALL_IMAGE_PATH, true);
             ball.renderer().setRenderable(redBallImage);
         }
         // else, fully-reset:
@@ -615,7 +616,7 @@ public class BrickerGameManager extends GameManager {
 
             ball.setCenter(windowDimensions.mult(0.5f));
 
-            Renderable redBallImage = imageReader.readImage("assets/ball.png", true);
+            Renderable redBallImage = imageReader.readImage(BALL_IMAGE_PATH, true);
             ball.renderer().setRenderable(redBallImage);
 
             this.gameObjects().addGameObject(ball);
@@ -632,7 +633,7 @@ public class BrickerGameManager extends GameManager {
     private void createPaddle(ImageReader imageReader,
                               UserInputListener inputListener,
                               Vector2 windowDimensions) {
-        Renderable paddleImage = imageReader.readImage("assets/paddle.png", true);
+        Renderable paddleImage = imageReader.readImage(PADDLE_IMAGE_PATH, true);
         Paddle paddle = new Paddle(Vector2.ZERO, new Vector2(PADDLE_WIDTH, PADDLE_HEIGHT),
                 paddleImage, inputListener, windowDimensions, false);
         paddle.setTag("Paddle");
@@ -681,7 +682,7 @@ public class BrickerGameManager extends GameManager {
      */
     private void createBrick(ImageReader imageReader,
                              Vector2 brickDims, Vector2 brickCoors) {
-        Renderable brickImage = imageReader.readImage("assets/brick.png", false);
+        Renderable brickImage = imageReader.readImage(BRICK_IMAGE_PATH, false);
 
         // create strategy:
         CollisionStrategy collisionStrategy = createBrickCollisionStrategy();

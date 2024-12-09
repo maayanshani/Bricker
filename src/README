@@ -1,5 +1,5 @@
 maayanshani,rotem.garti
-319111886,
+319111886, 207869520
 
 ## Answers to Questions
 
@@ -16,25 +16,29 @@ which does not interact with the ball, packs, or bricks.
 
 3. Each behavior is implemented in a separate strategy class that implements `CollisionStrategy`.
 For the extra pack, we created a new `Pack` class that extends `Ball` and used it.
-For the extra paddle, we added an additional parameter, `isExtraPaddle`, to the constructor,
-allowing us to distinguish between the original paddle and the extra one.
+Even tho the Pack does not have additional methods, the new class make the code more readable and allows to
+add more behaviors if needed without changing the Ball class, supporting the "open and close" principle.
+For the extra paddle, we did not create another class but added an additional parameter to the Paddle class,
+`isExtraPaddle`, allowing us to distinguish between the original paddle and the extra one.
 For returning lives, we used the `Heart` class and implemented a new strategy called `HeartCollideStrategy`.
 For the turbo feature, we created a function in the `GameManager` that changes the ball's velocity,
-used the collision counter to track its progress, and reset the speed to normal in the update function
-once it was done.
+used the collision counter to track its progress, and reset the ball back to normal once it was done.
+Every one of the behaviors who was collision\time-limited, was monitored in the the "update" method.
 
 4. The system randomly selects 2-3 strategies, ensuring no more than 3 are active at a time.
 It accepts `CollisionStrategy[]` as arguments, and upon collision,
 it uses all strategies' `onCollide` methods.
 
-5. New classes such as `Heart`, `Pack`,  were added to gameObjects package to enable a modular design.
+5. New classes such as `Heart`, `Pack`, were added to gameObjects package to enable a modular design.
 HeartCollideStrategy were added to a new package heartStrategy to allow the returnLiveStrategy and the
 collision between heart and the paddle.
-we changed updateLives method in brickerGameMangaer to public for allowing adding life to the player
+We also add some public methods to support additional features like lives and special brick behaviors:
+We changed updateLives method in brickerGameMangaer to public for allowing adding life to the player
 when the heart and paddle collide.
-
-Support additional features like lives and special brick behaviors. Public methods were added to the
-`GameManager` to support these changes.
+Also in Paddle class, we added two public methods to allow the Extra Paddle behavior -
+getNumCollision and isExtraPaddle.
+In addition, public methods were added to the`GameManager` to support these changes: to change game-modes,
+and add and remove objects to the game.
 
 ## Building
 - Start by adding DanoGameLab.jar and src to the modules inside Project Structure. 

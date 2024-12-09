@@ -58,7 +58,6 @@ public class Paddle extends GameObject {
         this.isExtraPaddle = isExtraPaddle;
     }
 
-    // TODO: not in the OG API, needed to be explaind in the README:
     /**
      * Returns the number of collisions this paddle has had with balls.
      *
@@ -68,7 +67,6 @@ public class Paddle extends GameObject {
         return numBallCollisions;
     }
 
-    // TODO: not in the OG API, needed to be explaind in the README:
     /**
      * Checks if this paddle is an extra paddle.
      *
